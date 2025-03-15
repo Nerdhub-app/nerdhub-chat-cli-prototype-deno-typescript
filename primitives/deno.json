@@ -1,0 +1,8 @@
+{
+  "name": "@scope/primitives",
+  "exports": {
+    ".": "./index.ts",
+    "./x3dh": "./x3dh/index.ts",
+    "./local-encryption": "./local-encryption/index.ts"
+  }
+}

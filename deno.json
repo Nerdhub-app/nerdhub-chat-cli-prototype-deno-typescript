@@ -1,0 +1,21 @@
+{
+  "tasks": {
+    "dev:server": "deno run --watch --allow-net --allow-env --allow-read --allow-write --unstable-kv --env-file server.ts --kv=./db/server --local-kv",
+    "kv:reset": "deno run --allow-net --allow-read --allow-write --allow-env --env-file --unstable-kv server/database/kv-reset.ts",
+    "dev:cli": "deno run --watch --allow-net --allow-env --allow-sys --allow-run --allow-read --allow-write --env-file cli.ts",
+    "db:reset": "deno run --allow-net --allow-env --allow-sys --allow-run --allow-read --allow-write --env-file cli.ts db-reset",
+    "fmt": "deno fmt",
+    "fmt:watch": "deno fmt --watch"
+  },
+  "imports": {
+    "@std/assert": "jsr:@std/assert@1",
+    "@std/cli": "jsr:@std/cli@^1.0.13"
+  },
+  "compilerOptions": {
+    "types": ["./global.d.ts"],
+    "lib": [
+      "deno.window"
+    ]
+  },
+  "workspace": ["./server", "./cli"]
+}
