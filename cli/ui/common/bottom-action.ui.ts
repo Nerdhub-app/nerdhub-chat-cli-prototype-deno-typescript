@@ -6,10 +6,11 @@ export type BottomActions = "MainMenu" | "Exit";
 export async function bottomActionsUI<TExtra extends string = string>(
   extra: { value: TExtra; name: string }[] = [],
 ) {
+  console.log("");
   const action = await Select.prompt<
     BottomActions | TExtra
   >({
-    message: "\nActions?",
+    message: "Actions?",
     options: [
       ...extra,
       { name: "Go to main menu", value: "MainMenu" },

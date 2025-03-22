@@ -3,6 +3,8 @@ import chatUI from "../ui/chat.ui.ts";
 import indexUI from "../ui/index.ui.ts";
 import loginUI from "../ui/login.ui.ts";
 import registerUI from "../ui/register.ui.ts";
+import LocalKeyManagerUI from "../ui/local-key-manager.ui.ts";
+import localKeyManagerStoreUI from "../ui/local-key-manager.store.ui.ts";
 
 export type RouteName =
   | "Index"
@@ -10,6 +12,9 @@ export type RouteName =
   | "Login"
   | "Chats"
   | "Chat"
+  | "LocalKeyManager"
+  | "LocalKeyManager.Store"
+  | "LocalKeyManager.Retrieve"
   | "Exit";
 
 type MaybePromise<T> = void | Promise<T>;
@@ -39,8 +44,15 @@ export const routes: RouteItem[] = [
   },
   {
     name: "Chat",
-    params: ["chatId"],
     render: () => chatUI(),
+  },
+  {
+    name: "LocalKeyManager",
+    render: (params) => LocalKeyManagerUI(params),
+  },
+  {
+    name: "LocalKeyManager.Store",
+    render: () => localKeyManagerStoreUI(),
   },
   {
     name: "Exit",

@@ -8,7 +8,7 @@ import {
 import { CLIRouter } from "../router/router.ts";
 import { initDatabase } from "../database/db.connection.ts";
 import dbResetCommand, { DB_RESET_COMMAND } from "./db-reset.command.ts";
-import * as AuthAPI from "../api/auth.api.ts";
+import AuthAPI from "../api/auth.api.ts";
 import type { UserLoginResponseDTO } from "@scope/server/types";
 
 export const indexCommand = new Command()
@@ -83,9 +83,11 @@ export const indexCommand = new Command()
         console.log(colors.red(`The login failed: ${message}`));
         Deno.exit();
       }
-      const { user } = await res.json() as UserLoginResponseDTO;
+      const { user, e2eeParticipant } = await res
+        .json() as UserLoginResponseDTO;
       cliContext.isAuthenticated = true;
       cliContext.user = user;
+      cliContext.e2eeParticipant = e2eeParticipant;
     }
     initDatabase({
       path: options.sqliteDb,

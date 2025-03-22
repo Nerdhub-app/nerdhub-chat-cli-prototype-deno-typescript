@@ -3,7 +3,7 @@ import { colors } from "@cliffy/ansi/colors";
 import { cliContext } from "../context.ts";
 import type { UserRegistrationResponseDTO } from "@scope/server/types";
 import { navigate } from "../router/router.ts";
-import * as AuthAPI from "../api/auth.api.ts";
+import AuthAPI from "../api/auth.api.ts";
 import { bottomActionsUI } from "./common/bottom-action.ui.ts";
 
 export default async function registerUI() {

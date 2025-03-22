@@ -4,5 +4,11 @@
     ".": "./index.ts",
     "./x3dh": "./x3dh/index.ts",
     "./local-encryption": "./local-encryption/index.ts"
+  },
+  "imports": {
+    "@std/assert": "jsr:@std/assert@^1.0.11"
+  },
+  "tasks": {
+    "test": "deno test --allow-read --allow-write"
   }
 }

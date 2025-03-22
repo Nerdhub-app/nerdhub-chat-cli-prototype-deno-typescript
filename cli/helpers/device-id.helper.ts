@@ -2,7 +2,7 @@ import os from "node:os";
 import crypto from "node:crypto";
 import { execSync } from "node:child_process";
 
-export function generateDeviceId() {
+export function generateDeviceHash() {
   const osType = os.type();
   const osRelease = os.release();
   const osArch = os.arch();
@@ -39,7 +39,7 @@ export function generateDeviceId() {
 
   const combinedString = `${osType}-${osRelease}-${osArch}-${machineId}`;
   const deviceId = crypto.createHash("sha256").update(combinedString).digest(
-    "hex",
+    "base64",
   );
 
   return deviceId;

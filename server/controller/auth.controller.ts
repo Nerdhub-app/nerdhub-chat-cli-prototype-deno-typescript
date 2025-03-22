@@ -5,8 +5,8 @@ import type {
   UserRegistrationDTO,
   UserRegistrationResponseDTO,
 } from "../server.d.ts";
-import * as UserRepository from "../repository/user.repository.ts";
-import * as E2EEParticipantRepository from "../repository/e2ee-participant.repository.ts";
+import UserRepository from "../repository/user.repository.ts";
+import E2EEParticipantRepository from "../repository/e2ee-participant.repository.ts";
 import { createJWT } from "../utils/jwt.utils.ts";
 import { verifyPassword } from "../utils/password.utils.ts";
 import {
@@ -51,6 +51,7 @@ export default class AuthController {
         createdAt: user.createdAt,
         updatedAt: user.updatedAt,
       },
+      e2eeParticipant,
       access_token,
     };
 
@@ -114,6 +115,7 @@ export default class AuthController {
         createdAt: user.createdAt,
         updatedAt: user.updatedAt,
       },
+      e2eeParticipant,
       access_token,
     };
     return new Response(JSON.stringify(body));
@@ -122,11 +124,29 @@ export default class AuthController {
   static async handleGetAuthUser(req: Request) {
     try {
       const { payload, access_token } = await handleBearerToken(req);
-      const user = await UserRepository.getById(payload.sub as string);
 
+      const user = await UserRepository.getById(payload.sub as string);
       if (!user) {
         return new Response(
           JSON.stringify({ message: "The authenticated user is not found" }),
+          {
+            status: 404,
+            headers: {
+              "Content-Type": "application/json",
+            },
+          },
+        );
+      }
+
+      const e2eeParticipant = await E2EEParticipantRepository.getById(
+        user.id,
+        payload.e2eeParticipantId,
+      );
+      if (!e2eeParticipant) {
+        return new Response(
+          JSON.stringify({
+            message: "The end-to-end participant is not found",
+          }),
           {
             status: 404,
             headers: {
@@ -145,6 +165,7 @@ export default class AuthController {
           createdAt: user.createdAt,
           updatedAt: user.updatedAt,
         },
+        e2eeParticipant,
         access_token,
       };
       return new Response(JSON.stringify(body), {

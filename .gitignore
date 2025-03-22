@@ -1,2 +1,8 @@
+# Local database files (SQLite and KV)
 db/
+
+# Local encryption keys
+keys/
+
+# Env variables
 .env

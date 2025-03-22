@@ -17,5 +17,5 @@
       "deno.window"
     ]
   },
-  "workspace": ["./server", "./cli"]
+  "workspace": ["./server", "./cli", "./primitives"]
 }

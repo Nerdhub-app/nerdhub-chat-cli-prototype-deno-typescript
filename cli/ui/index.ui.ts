@@ -11,7 +11,7 @@ export default async function indexUI() {
   }
 
   const navigateTo = await Select.prompt<RouteName>({
-    message: "What do you want to do?",
+    message: "Main menu:",
     options: [
       {
         name: "Register",
@@ -19,6 +19,7 @@ export default async function indexUI() {
         disabled: cliContext.isAuthenticated,
       },
       { name: "Login", value: "Login", disabled: cliContext.isAuthenticated },
+      { name: "Local encryption key manager", value: "LocalKeyManager" },
       { name: "Chat", value: "Chat", disabled: !cliContext.isAuthenticated },
       { name: "Exit", value: "Exit" },
     ],

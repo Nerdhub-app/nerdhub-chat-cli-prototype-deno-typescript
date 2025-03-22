@@ -1,7 +1,12 @@
 import type { Buffer } from "node:buffer";
-import type { UserWithoutPassword } from "@scope/server/types";
+import type {
+  E2EEParticipant as ServerE2EEParticipant,
+  UserWithoutPassword,
+} from "@scope/server/types";
 
 export type User = UserWithoutPassword;
+
+export type E2EEParticipant = ServerE2EEParticipant;
 
 export type E2EEParticipantPrekeyBundle = {
   user_id: string;

@@ -1,7 +1,7 @@
 import { Confirm, Input } from "@cliffy/prompt";
 import { colors } from "@cliffy/ansi/colors";
 import type { UserLoginResponseDTO } from "@scope/server/types";
-import * as AuthAPI from "../api/auth.api.ts";
+import AuthAPI from "../api/auth.api.ts";
 import { cliContext } from "../context.ts";
 import { navigate } from "../router/router.ts";
 import { bottomActionsUI } from "./common/bottom-action.ui.ts";
@@ -38,6 +38,7 @@ export default async function loginUI() {
 
     cliContext.isAuthenticated = true;
     cliContext.user = body.user;
+    cliContext.e2eeParticipant = body.e2eeParticipant;
     cliContext.jwt = body.access_token;
   }
 

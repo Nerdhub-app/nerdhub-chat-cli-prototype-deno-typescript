@@ -24,6 +24,7 @@ export type UserRegistrationDTO = {
 
 export type UserRegistrationResponseDTO = {
   user: Omit<User, "password">;
+  e2eeParticipant: E2EEParticipant;
   access_token: string;
 };
 
