@@ -1,15 +1,18 @@
-import { Input, Select } from "@cliffy/prompt";
+import { Confirm, Input, Select } from "@cliffy/prompt";
 import { cliContext } from "../context.ts";
 import { LocalEncryptionKeyManager } from "@scope/primitives/local-encryption";
 import { colors } from "@cliffy/ansi/colors";
 import { bottomActionsUI } from "./common/bottom-action.ui.ts";
 import { generateLocalEncryptionKeyPemFilePathForUser } from "../helpers/local-encryption-key.helper.ts";
+import { navigate } from "../router/router.ts";
 
 type LocalEnryptionKeyGenerationMode = "provided" | "user-based";
 
 const localKeyManager = new LocalEncryptionKeyManager();
 
-export default async function localKeyManagerStoreUI() {
+export default async function localKeyManagerStoreUI(
+  params?: Record<string, string>,
+) {
   const source = await Select.prompt<LocalEnryptionKeyGenerationMode>({
     message:
       "How to name the `.pem` file that stores the local encryption key?",
@@ -22,6 +25,7 @@ export default async function localKeyManagerStoreUI() {
       { name: "Provide my own custom `.pem` filename", value: "provided" },
     ],
   }) as LocalEnryptionKeyGenerationMode;
+  console.log();
 
   let keyPath: string;
   if (cliContext.isAuthenticated && source === "user-based") {
@@ -52,15 +56,60 @@ export default async function localKeyManagerStoreUI() {
         }
       },
     });
+    console.log();
   }
 
-  const key = localKeyManager.generateKey();
-  localKeyManager.storeKey(key, keyPath);
-  cliContext.localEncryptionKey = key;
+  let keyAlreadyExists = false;
+  let reuseExistingKeyPrompt = false;
+  try {
+    keyAlreadyExists = Deno.statSync(keyPath).isFile;
+    if (keyAlreadyExists) {
+      console.log(
+        colors.yellow(
+          "A `.pem` file at the corresponding full path already exists.",
+        ),
+      );
+      reuseExistingKeyPrompt = await Confirm.prompt(
+        "Do you want to reuse the existing key?",
+      );
+      console.log();
+      if (!reuseExistingKeyPrompt) {
+        const warningText =
+          "If you choose to override the existing key, the decryption of your current local data is likely going to fail.";
+        console.log(colors.yellow(warningText));
+        reuseExistingKeyPrompt = !await Confirm.prompt(
+          "Do you still want to procede on overriding the existing key",
+        );
+        console.log();
+      }
+    }
+  } catch (_) {
+    // error
+  }
+  const reuseExistingKey = keyAlreadyExists && reuseExistingKeyPrompt;
 
-  console.log("The local encryption key has been stored.");
+  const key = reuseExistingKey
+    ? localKeyManager.retrieveKey(keyPath)
+    : localKeyManager.generateKey();
+  cliContext.localEncryptionKey = key;
+  if (!reuseExistingKey) {
+    localKeyManager.storeKey(key, keyPath);
+  }
+
+  const keyFeedbackText = reuseExistingKey
+    ? "The local encryption key retrieved."
+    : "The local encryption key has been stored.";
+  console.log(keyFeedbackText);
   console.log("Full path: " + colors.blue(keyPath));
   console.log("Key (base64): " + colors.green(key.toString("base64")));
+  console.log();
+
+  // Navigate back to Chats UI if the local encryption manager UI was redirected from Chats UI
+  if (params?.from && params.from === "Chats") {
+    navigate({
+      name: params.from,
+    });
+  }
 
   await bottomActionsUI();
 }

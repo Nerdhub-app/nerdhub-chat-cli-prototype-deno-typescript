@@ -5,6 +5,7 @@ import loginUI from "../ui/login.ui.ts";
 import registerUI from "../ui/register.ui.ts";
 import LocalKeyManagerUI from "../ui/local-key-manager.ui.ts";
 import localKeyManagerStoreUI from "../ui/local-key-manager.store.ui.ts";
+import localKeyManagerRetrieveUI from "../ui/local-key-manager.retrieve.ui.ts";
 
 export type RouteName =
   | "Index"
@@ -52,7 +53,11 @@ export const routes: RouteItem[] = [
   },
   {
     name: "LocalKeyManager.Store",
-    render: () => localKeyManagerStoreUI(),
+    render: (params) => localKeyManagerStoreUI(params),
+  },
+  {
+    name: "LocalKeyManager.Retrieve",
+    render: (params) => localKeyManagerRetrieveUI(params),
   },
   {
     name: "Exit",
