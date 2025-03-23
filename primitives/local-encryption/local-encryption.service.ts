@@ -18,7 +18,7 @@ class LocalEncryptionService implements LocalEncryptionServicePrimitives {
 
   encrypt(data: Buffer, ad: Buffer): LocalEncryptionResult {
     const iv = crypto.randomBytes(12);
-    const cipher = crypto.createCipheriv("aes-256-gcm", iv, this.#key);
+    const cipher = crypto.createCipheriv("aes-256-gcm", this.#key, iv);
     cipher.setAAD(ad);
     const encrypted = Buffer.concat([cipher.update(data), cipher.final()]);
     const authTag = cipher.getAuthTag();
@@ -26,7 +26,7 @@ class LocalEncryptionService implements LocalEncryptionServicePrimitives {
   }
 
   decrypt(cipher: Buffer, ad: Buffer, iv: Buffer, authTag: Buffer): Buffer {
-    const decipher = crypto.createDecipheriv("aes-256-gcm", iv, this.#key);
+    const decipher = crypto.createDecipheriv("aes-256-gcm", this.#key, iv);
     decipher.setAAD(ad);
     decipher.setAuthTag(authTag);
     return Buffer.concat([decipher.update(cipher), decipher.final()]);
