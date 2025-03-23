@@ -10,6 +10,7 @@ import { initDatabase } from "../database/db.connection.ts";
 import dbResetCommand, { DB_RESET_COMMAND } from "./db-reset.command.ts";
 import AuthAPI from "../api/auth.api.ts";
 import type { UserLoginResponseDTO } from "@scope/server/types";
+import { LocalEncryptionKeyManager } from "../../primitives/local-encryption/local-encryption-key.manager.ts";
 
 export const indexCommand = new Command()
   .name("Signal Protocol chat CLI")
@@ -42,12 +43,20 @@ export const indexCommand = new Command()
   )
   .globalEnv("AUTH_JWT <token:string>", "Access token JWT")
   .globalOption("-jwt, --auth-jwt <jwt:string>", "Access token JWT")
+  .globalEnv(
+    "LOCAL_ENCRYPTION_KEY_PATH <path:string>",
+    "The path the to the `.pem` file of local encryption key.",
+  )
   .globalOption(
-    "-cred.e, --auth-credentials.email <jwt:string>",
+    "-lk, --local-encryption-key-path <path:string>",
+    "The path the to the `.pem` file of local encryption key.",
+  )
+  .globalOption(
+    "-cred.e, --auth-credentials.email <email:string>",
     "Authentication credentials: Email",
   )
   .globalOption(
-    "-cred.p, --auth-credentials.password <jwt:string>",
+    "-cred.p, --auth-credentials.password <password:string>",
     "Authentication credentials: Password",
   )
   .globalAction(async (options) => {
@@ -89,6 +98,13 @@ export const indexCommand = new Command()
       cliContext.user = user;
       cliContext.e2eeParticipant = e2eeParticipant;
     }
+    if (options.localEncryptionKeyPath) {
+      const keyManager = new LocalEncryptionKeyManager();
+      cliContext.localEncryptionKey = keyManager.retrieveKey(
+        options.localEncryptionKeyPath,
+      );
+    }
+    // Initializing the database
     initDatabase({
       path: options.sqliteDb,
       isLocal: options.localSqliteDb,
