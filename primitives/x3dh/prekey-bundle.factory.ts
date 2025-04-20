@@ -2,45 +2,14 @@ import type { Buffer } from "node:buffer";
 import crypto from "node:crypto";
 import { ulid } from "@std/ulid";
 import type {
-  FactoryOneTimePreKey,
-  FactoryPreKeyBundle as IFactoryPreKeyBundle,
-  FactorySignedPreKeyBundle,
-  PreKeyBundle,
+  OneTimePreKey,
+  PreKeyBundle as IPreKeyBundle,
+  PreKeyBundleFactoryParams,
   PreKeyBundleFactoryPrimitives,
+  SignedPreKeyBundle,
+  XEdDSAPrimitives,
 } from "./x3dh.d.ts";
-import type { XEdDSAPrimitives } from "./x3dh.d.ts";
-
-class FactoryPreKeyBundle implements IFactoryPreKeyBundle {
-  identityKey!: [Buffer, Buffer];
-  signedPreKey!: [Buffer, Buffer];
-  signedPreKeySignature!: Buffer;
-
-  constructor(
-    identityKey: [Buffer, Buffer],
-    signedPreKey: [Buffer, Buffer],
-    signedPreKeySignature: Buffer,
-  ) {
-    this.identityKey = identityKey;
-    this.signedPreKey = signedPreKey;
-    this.signedPreKeySignature = signedPreKeySignature;
-  }
-
-  toPreKeyBundle(
-    part: "public" | "private",
-    onetimePreKey?: Buffer,
-  ): PreKeyBundle {
-    const i = part === "public" ? 1 : 0;
-    const prekeyBundle: PreKeyBundle = {
-      identityKey: this.identityKey[i],
-      signedPreKey: this.signedPreKey[i],
-      signedPreKeySignature: this.signedPreKeySignature,
-    };
-    if (onetimePreKey) {
-      prekeyBundle.onetimePreKey = onetimePreKey;
-    }
-    return prekeyBundle;
-  }
-}
+import PreKeyBundle from "./prekey-bundle.ts";
 
 export default class PreKeyBundleFactory
   implements PreKeyBundleFactoryPrimitives {
@@ -50,7 +19,7 @@ export default class PreKeyBundleFactory
     this.#xeddsa = xeddsa;
   }
 
-  createSignedPreKeyBundle(identityKey: Buffer): FactorySignedPreKeyBundle {
+  createSignedPreKeyBundle(identityKey: Buffer): SignedPreKeyBundle {
     const { privateKey, publicKey } = crypto.generateKeyPairSync("x25519");
     const privateKeyBuffer = privateKey.export({
       type: "pkcs8",
@@ -73,8 +42,8 @@ export default class PreKeyBundleFactory
     };
   }
 
-  createManyOneTimePreKeys(count = 1): FactoryOneTimePreKey[] {
-    const oneTimePreKeys: FactoryOneTimePreKey[] = [];
+  createManyOneTimePreKeys(count = 1): OneTimePreKey[] {
+    const oneTimePreKeys: OneTimePreKey[] = [];
     for (let i = 0; i < count; i++) {
       const id = ulid();
       const { privateKey, publicKey } = crypto.generateKeyPairSync("x25519");
@@ -89,7 +58,7 @@ export default class PreKeyBundleFactory
     return oneTimePreKeys;
   }
 
-  createPreKeyBundle(): FactoryPreKeyBundle {
+  createPreKeyBundle(params?: PreKeyBundleFactoryParams): IPreKeyBundle {
     // Identity key pair
     const identityKeyPair = crypto.generateKeyPairSync("x25519");
     const privateIdentityKeyBuffer = identityKeyPair.privateKey.export({
@@ -110,10 +79,11 @@ export default class PreKeyBundleFactory
       privateIdentityKeyBuffer,
     );
 
-    return new FactoryPreKeyBundle(
+    return new PreKeyBundle(
       identityKeyPairBuffers,
       signedPreKeyBundle.signedPreKey,
       signedPreKeyBundle.signedPreKeySignature,
+      params?.onetimePreKey ?? undefined,
     );
   }
 }

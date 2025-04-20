@@ -1,7 +1,8 @@
 import crypto, { type KeyObject } from "node:crypto";
 import { Buffer } from "node:buffer";
 import type {
-  PreKeyBundle,
+  OneSidedPreKeyBundle,
+  PreKeyBundle as IPreKeyBundle,
   X3DHPrimitives,
   XEdDSAPrimitives,
 } from "./x3dh.d.ts";
@@ -43,19 +44,19 @@ export default class X3DH implements X3DHPrimitives {
   /**
    * The private parts of the E2EE participant's PreKey bundle
    */
-  preKeyBundle!: PreKeyBundle;
+  preKeyBundle!: IPreKeyBundle;
 
   // The XEdDSA dependency for performing XEdDSA operations
   xEdDSA!: XEdDSAPrimitives;
 
-  constructor(preKeyBundle: PreKeyBundle, xEdDSA: XEdDSAPrimitives) {
+  constructor(preKeyBundle: IPreKeyBundle, xEdDSA: XEdDSAPrimitives) {
     this.preKeyBundle = preKeyBundle;
     this.xEdDSA = xEdDSA;
   }
 
   deriveSecretKeyWithRecipient(
     ephemeralKey: Buffer,
-    recipientPreKeyBundle: PreKeyBundle,
+    recipientPreKeyBundle: OneSidedPreKeyBundle,
   ): Buffer {
     // Verification of the recipient's signed prekey
     const signedPreKeyVerified = this.xEdDSA.verify(
@@ -70,7 +71,7 @@ export default class X3DH implements X3DHPrimitives {
 
     // `KeyObject` wrappers for the keys used in the protocol
     const initiatorPrivateIdentityKey = wrapKeyBufferInsideKeyObject(
-      this.preKeyBundle.identityKey,
+      this.preKeyBundle.identityKey[0],
       "private",
     );
     const initiatorPrivateEphemeralKey = wrapKeyBufferInsideKeyObject(
@@ -151,11 +152,11 @@ export default class X3DH implements X3DHPrimitives {
       "public",
     );
     const recipientPrivateIdentityKey = wrapKeyBufferInsideKeyObject(
-      this.preKeyBundle.identityKey,
+      this.preKeyBundle.identityKey[0],
       "private",
     );
     const recipientPrivateSignedPreKey = wrapKeyBufferInsideKeyObject(
-      this.preKeyBundle.signedPreKey,
+      this.preKeyBundle.signedPreKey[0],
       "private",
     );
 
@@ -182,7 +183,7 @@ export default class X3DH implements X3DHPrimitives {
     // (Optionally) DH4: DH(<Recipient's private one-time prekey>, <Initiator's public ephemeral key>)
     if (this.preKeyBundle.onetimePreKey) {
       const recipientPrivateOneTimePreKey = wrapKeyBufferInsideKeyObject(
-        this.preKeyBundle.onetimePreKey,
+        this.preKeyBundle.onetimePreKey[0],
         "private",
       );
       const dh4Secret = crypto.diffieHellman({

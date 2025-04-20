@@ -12,10 +12,11 @@ const preKeyBundleFactory = new PreKeyBundleFactory(xEdDSA);
 Deno.test("Alice & Bob both derive the same shared secret key through X3DH", () => {
   // Alice's PreKey bundle
   const alicePreKeyBundle = preKeyBundleFactory.createPreKeyBundle();
-  const alicePrivatePreKeyBundle = alicePreKeyBundle.toPreKeyBundle("private");
-  const alicePublicPreKeyBundle = alicePreKeyBundle.toPreKeyBundle("public");
+  const alicePublicPreKeyBundle = alicePreKeyBundle.toOneSidedPreKeyBundle(
+    "public",
+  );
   // Alice's X3DH instance
-  const aliceX3DH = new X3DH(alicePrivatePreKeyBundle, xEdDSA);
+  const aliceX3DH = new X3DH(alicePreKeyBundle, xEdDSA);
 
   // Alice's ephemeral key
   const aliceEphemeralKeyObjects = crypto.generateKeyPairSync("x25519");
@@ -30,17 +31,14 @@ Deno.test("Alice & Bob both derive the same shared secret key through X3DH", () 
   // Bob's one-time PreKey
   const [bobOneTimePreKey] = preKeyBundleFactory.createManyOneTimePreKeys();
   // Bob's PreKey bundle
-  const bobPreKeyBundle = preKeyBundleFactory.createPreKeyBundle();
-  const bobPrivatePreKeyBundle = bobPreKeyBundle.toPreKeyBundle(
-    "private",
-    bobOneTimePreKey.keyPair[0],
-  );
-  const bobPublicPreKeyBundle = bobPreKeyBundle.toPreKeyBundle(
+  const bobPreKeyBundle = preKeyBundleFactory.createPreKeyBundle({
+    onetimePreKey: bobOneTimePreKey.keyPair,
+  });
+  const bobPublicPreKeyBundle = bobPreKeyBundle.toOneSidedPreKeyBundle(
     "public",
-    bobOneTimePreKey.keyPair[1],
   );
   // Bob's X3DH instance
-  const bobX3DH = new X3DH(bobPrivatePreKeyBundle, xEdDSA);
+  const bobX3DH = new X3DH(bobPreKeyBundle, xEdDSA);
 
   // Deriving both's secret keys
   const aliceSharedSecret = aliceX3DH.deriveSecretKeyWithRecipient(
