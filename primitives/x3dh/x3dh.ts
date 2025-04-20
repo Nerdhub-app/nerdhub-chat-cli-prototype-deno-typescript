@@ -55,7 +55,7 @@ export default class X3DH implements X3DHPrimitives {
   }
 
   deriveSecretKeyWithRecipient(
-    ephemeralKey: Buffer,
+    initiatorEphemeralKey: Buffer,
     recipientPreKeyBundle: OneSidedPreKeyBundle,
   ): Buffer {
     // Verification of the recipient's signed prekey
@@ -75,7 +75,7 @@ export default class X3DH implements X3DHPrimitives {
       "private",
     );
     const initiatorPrivateEphemeralKey = wrapKeyBufferInsideKeyObject(
-      ephemeralKey,
+      initiatorEphemeralKey,
       "private",
     );
     const recipientPublicIdentityKey = wrapKeyBufferInsideKeyObject(
@@ -139,16 +139,16 @@ export default class X3DH implements X3DHPrimitives {
   }
 
   deriveSecretKeyWithInitiator(
-    identityKey: Buffer,
-    ephemeralKey: Buffer,
+    initiatorIdentityKey: Buffer,
+    initiatorEphemeralKey: Buffer,
   ): Buffer {
     // `KeyObject` wrappers for the keys used in the protocol
     const initiatorPublicIdentityKey = wrapKeyBufferInsideKeyObject(
-      identityKey,
+      initiatorIdentityKey,
       "public",
     );
     const initiatorPublicEphemeralKey = wrapKeyBufferInsideKeyObject(
-      ephemeralKey,
+      initiatorEphemeralKey,
       "public",
     );
     const recipientPrivateIdentityKey = wrapKeyBufferInsideKeyObject(

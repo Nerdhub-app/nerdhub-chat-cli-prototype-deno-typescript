@@ -95,7 +95,13 @@ export type SignedPreKeyBundle = {
   signedPreKeySignature: Buffer;
 };
 
+/**
+ * Params for the factory of a prekey bundle
+ */
 export type PreKeyBundleFactoryParams = {
+  /**
+   * Pair of optional one-time prekey
+   */
   onetimePreKey?: [Buffer, Buffer];
 };
 
@@ -111,9 +117,9 @@ export interface PreKeyBundleFactoryPrimitives {
   /**
    * Generates a signed PreKey bundle.
    *
-   * @param identityKey The private identity key used to sign the public part of the signed prekey
+   * @param privateIdentityKey The private identity key used to sign the public part of the signed prekey
    */
-  createSignedPreKeyBundle(identityKey: Buffer): SignedPreKeyBundle;
+  createSignedPreKeyBundle(privateIdentityKey: Buffer): SignedPreKeyBundle;
 
   /**
    * Generates `@param count` random one-time PreKeys.
@@ -136,11 +142,11 @@ export interface X3DHPrimitives {
    * The E2EE participant (Initiator) derives a X3DH shared secret with another E2EE participant (Recipient)
    * using the latter's public PreKey bundle.
    *
-   * @param ephemeralKey The private ephemeral key of the E2EE participant (Initiator)
+   * @param initiatorEphemeralKey The private ephemeral key of the E2EE participant (Initiator)
    * @param recipientPreKeyBundle The public PreKey bundle of the recipient
    */
   deriveSecretKeyWithRecipient(
-    ephemeralKey: Buffer,
+    initiatorEphemeralKey: Buffer,
     recipientPreKeyBundle: OneSidedPreKeyBundle,
   ): Buffer;
 
@@ -148,12 +154,12 @@ export interface X3DHPrimitives {
    * The E2EE participant (Recipient) derives a X3DH shared secret with another E2EE participant (Initiator)
    * using the latter's public identity key and public ephemeral key.
    *
-   * @param identityKey The public identity key of the initiator
-   * @param ephemeralKey The public ephemeral key of the initiator
+   * @param initiatorIdentityKey The public identity key of the initiator
+   * @param initiatorEphemeralKey The public ephemeral key of the initiator
    */
   deriveSecretKeyWithInitiator(
-    identityKey: Buffer,
-    ephemeralKey: Buffer,
+    initiatorIdentityKey: Buffer,
+    initiatorEphemeralKey: Buffer,
   ): Buffer;
 }
 
