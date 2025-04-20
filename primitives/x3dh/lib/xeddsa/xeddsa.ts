@@ -5,7 +5,7 @@ import init, { sign, verify } from "./wasm/xeddsa.js";
 // Loading WASM
 await init();
 
-export class XEdDSA implements XEdDSAPrimitives {
+export default class XEdDSA implements XEdDSAPrimitives {
   sign(message: Buffer, x25519PrivateKey: Buffer): Buffer {
     return Buffer.from(
       sign(new Uint8Array(x25519PrivateKey), new Uint8Array(message)),

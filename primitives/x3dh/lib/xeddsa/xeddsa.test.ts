@@ -1,7 +1,7 @@
 import { assert } from "@std/assert";
 import type { Buffer } from "node:buffer";
 import { generateKeyPairSync, type KeyObject, randomBytes } from "node:crypto";
-import { XEdDSA } from "./xeddsa.ts";
+import XEdDSA from "./xeddsa.ts";
 
 const xeddsa = new XEdDSA();
 
