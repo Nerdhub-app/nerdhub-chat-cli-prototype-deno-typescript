@@ -161,6 +161,22 @@ export interface X3DHPrimitives {
     initiatorIdentityKey: Buffer,
     initiatorEphemeralKey: Buffer,
   ): Buffer;
+
+  /**
+   * Builds the associated data a.k.a. AD with the initiator.
+   *
+   * @param initiatorPublicIdentityKey The public part of the initiator's identity key.
+   * @return The resulting Associated Data
+   */
+  buildAssociatedDataWithInitiator(initiatorPublicIdentityKey: Buffer): Buffer;
+
+  /**
+   * Builds the associated data a.k.a. AD with the recipient.
+   *
+   * @param initiatorPublicIdentityKey The public part of the recipient's identity key.
+   * @return The resulting Associated Data
+   */
+  buildAssociatedDataWithRecipient(recipientPublicIdentityKey: Buffer): Buffer;
 }
 
 /**

@@ -210,6 +210,20 @@ export default class X3DH implements X3DHPrimitives {
 
     return secretKey;
   }
+
+  buildAssociatedDataWithRecipient(recipientPublicIdentityKey: Buffer): Buffer {
+    return Buffer.concat([
+      this.preKeyBundle.identityKey[1],
+      recipientPublicIdentityKey,
+    ]);
+  }
+
+  buildAssociatedDataWithInitiator(initiatorPublicIdentityKey: Buffer): Buffer {
+    return Buffer.concat([
+      initiatorPublicIdentityKey,
+      this.preKeyBundle.identityKey[1],
+    ]);
+  }
 }
 
 /**
