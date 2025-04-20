@@ -1,6 +1,21 @@
 import type { Buffer } from "node:buffer";
 
 /**
+ * PreKey bundle of an E2EE participant.
+ * Apart from the signed prekey signature, the other key fields can altogether represent
+ * either the public key parts or the private key parts of the keys
+ * depending on whether the prekey bundle owner is the initiator of the session or the recipient.
+ */
+export type PreKeyBundle =
+  & Record<
+    | "identityKey"
+    | "signedPreKey"
+    | "signedPreKeySignature",
+    Buffer
+  >
+  & { onetimePreKey?: Buffer };
+
+/**
  * A one-time prekey that is stored in the database.
  */
 export type StoredOneTimePreKey = {
@@ -42,13 +57,23 @@ export type FactoryOneTimePreKey = {
  * - [0]: Private key
  * - [1]: Public key
  */
-export type FactoryPreKeyBundle =
-  & Record<
-    | "identityKey"
-    | "signedPreKey",
-    [Buffer, Buffer]
-  >
-  & { signedPreKeySignature: Buffer };
+export interface FactoryPreKeyBundle {
+  identityKey: [Buffer, Buffer];
+  signedPreKey: [Buffer, Buffer];
+  signedPreKeySignature: Buffer;
+
+  /**
+   * Returns a `PreKeyBundle` where the keys are either the public key parts or private key parts
+   * depending on the value of `part`.
+   *
+   * @param part Either `"public"` or `"private"` depending on which part of the key is desired.
+   * @param onetimePreKey Optional one-time prekey to include in the PreKey bundle
+   */
+  toPreKeyBundle(
+    part: "public" | "private",
+    onetimePreKey?: Buffer,
+  ): PreKeyBundle;
+}
 
 /**
  * Signed PreKey bundle generated from a PreKey factory.
@@ -79,7 +104,7 @@ export interface PreKeyBundleFactoryPrimitives {
   /**
    * Generates a signed PreKey bundle.
    *
-   * @param identityKey The private identity key used to sign the public signed prekey
+   * @param identityKey The private identity key used to sign the public part of the signed prekey
    */
   createSignedPreKeyBundle(identityKey: Buffer): FactorySignedPreKeyBundle;
 
@@ -92,28 +117,13 @@ export interface PreKeyBundleFactoryPrimitives {
 }
 
 /**
- * PreKey bundle of an E2EE participant.
- * Apart from the signed prekey signature, the other key fields can altogether represent
- * either the public versions or the private versions of the keys
- * depending on whether the prekey bundle owner is the initiator of the session or the recipient.
- */
-export type PreKeyBundle =
-  & Record<
-    | "identityKey"
-    | "signedPreKey"
-    | "signedPreKeySignature",
-    Buffer
-  >
-  & { onetimePreKey?: Buffer };
-
-/**
  * Primitives for X3DH operations for an E2EE participant.
  */
 export interface X3DHPrimitives {
   /**
-   * The implemented object should expose the participant's PreKey bundle.
+   * The implemented object should expose the participant's private PreKey bundle.
    */
-  get preKeyBundle(): PreKeyBundle;
+  preKeyBundle: PreKeyBundle;
 
   /**
    * The E2EE participant (Initiator) derives a X3DH shared secret with another E2EE participant (Recipient)
@@ -122,7 +132,7 @@ export interface X3DHPrimitives {
    * @param ephemeralKey The private ephemeral key of the E2EE participant (Initiator)
    * @param recipientPreKeyBundle The public PreKey bundle of the recipient
    */
-  deriveKeyWithRecipient(
+  deriveSecretKeyWithRecipient(
     ephemeralKey: Buffer,
     recipientPreKeyBundle: PreKeyBundle,
   ): Buffer;
@@ -134,7 +144,10 @@ export interface X3DHPrimitives {
    * @param identityKey The public identity key of the initiator
    * @param ephemeralKey The public ephemeral key of the initiator
    */
-  deriveKeyWithInitiator(identityKey: Buffer, ephemeralKey: Buffer): Buffer;
+  deriveSecretKeyWithInitiator(
+    identityKey: Buffer,
+    ephemeralKey: Buffer,
+  ): Buffer;
 }
 
 /**

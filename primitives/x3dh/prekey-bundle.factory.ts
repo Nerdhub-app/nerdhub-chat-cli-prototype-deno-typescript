@@ -3,11 +3,44 @@ import crypto from "node:crypto";
 import { ulid } from "@std/ulid";
 import type {
   FactoryOneTimePreKey,
-  FactoryPreKeyBundle,
+  FactoryPreKeyBundle as IFactoryPreKeyBundle,
   FactorySignedPreKeyBundle,
+  PreKeyBundle,
   PreKeyBundleFactoryPrimitives,
 } from "./x3dh.d.ts";
 import type { XEdDSAPrimitives } from "./x3dh.d.ts";
+
+class FactoryPreKeyBundle implements IFactoryPreKeyBundle {
+  identityKey!: [Buffer, Buffer];
+  signedPreKey!: [Buffer, Buffer];
+  signedPreKeySignature!: Buffer;
+
+  constructor(
+    identityKey: [Buffer, Buffer],
+    signedPreKey: [Buffer, Buffer],
+    signedPreKeySignature: Buffer,
+  ) {
+    this.identityKey = identityKey;
+    this.signedPreKey = signedPreKey;
+    this.signedPreKeySignature = signedPreKeySignature;
+  }
+
+  toPreKeyBundle(
+    part: "public" | "private",
+    onetimePreKey?: Buffer,
+  ): PreKeyBundle {
+    const i = part === "public" ? 1 : 0;
+    const prekeyBundle: PreKeyBundle = {
+      identityKey: this.identityKey[i],
+      signedPreKey: this.signedPreKey[i],
+      signedPreKeySignature: this.signedPreKeySignature,
+    };
+    if (onetimePreKey) {
+      prekeyBundle.onetimePreKey = onetimePreKey;
+    }
+    return prekeyBundle;
+  }
+}
 
 export default class PreKeyBundleFactory
   implements PreKeyBundleFactoryPrimitives {
@@ -23,13 +56,17 @@ export default class PreKeyBundleFactory
       type: "pkcs8",
       format: "der",
     });
-    // The raw private key buffer is the last 32 bytes of the export
-    const rawPrivateKeyBuffer = privateKeyBuffer.subarray(-32);
     const publicKeyBuffer = publicKey.export({ type: "spki", format: "der" });
+
+    // The raw private key buffer is the last 32 bytes of the pkcs8 encoded identity key
+    const rawPrivateIdentityKey = identityKey.subarray(-32);
+
+    // Signature of the public key part of the signed prekey with the private part of the identity key
     const signedPreKeySignature = this.#xeddsa.sign(
-      identityKey,
-      rawPrivateKeyBuffer,
+      publicKeyBuffer,
+      rawPrivateIdentityKey,
     );
+
     return {
       signedPreKey: [privateKeyBuffer, publicKeyBuffer],
       signedPreKeySignature,
@@ -53,21 +90,30 @@ export default class PreKeyBundleFactory
   }
 
   createPreKeyBundle(): FactoryPreKeyBundle {
+    // Identity key pair
     const identityKeyPair = crypto.generateKeyPairSync("x25519");
-    const identityKeyPublicBuffer = identityKeyPair.publicKey.export({
+    const privateIdentityKeyBuffer = identityKeyPair.privateKey.export({
+      type: "pkcs8",
+      format: "der",
+    });
+    const publicIdentityKeyBuffer = identityKeyPair.publicKey.export({
       type: "spki",
       format: "der",
     });
+    const identityKeyPairBuffers = [
+      privateIdentityKeyBuffer,
+      publicIdentityKeyBuffer,
+    ] satisfies [Buffer, Buffer];
+
+    // Signed PreKey bundle
     const signedPreKeyBundle = this.createSignedPreKeyBundle(
-      identityKeyPublicBuffer,
+      privateIdentityKeyBuffer,
     );
-    return {
-      identityKey: [
-        identityKeyPair.privateKey.export({ type: "pkcs8", format: "der" }),
-        identityKeyPublicBuffer,
-      ],
-      signedPreKey: signedPreKeyBundle.signedPreKey,
-      signedPreKeySignature: signedPreKeyBundle.signedPreKeySignature,
-    };
+
+    return new FactoryPreKeyBundle(
+      identityKeyPairBuffers,
+      signedPreKeyBundle.signedPreKey,
+      signedPreKeyBundle.signedPreKeySignature,
+    );
   }
 }
