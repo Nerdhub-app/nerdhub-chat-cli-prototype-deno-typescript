@@ -28,11 +28,11 @@ export type LocalEncryptionResult = {
   authTag: Buffer;
 };
 
-export interface LocalEncryptionServicePrimitives {
+export interface LocalEncryptionPrimitives {
   /**
    * The 256-bits encryption key
    */
-  get key(): Buffer;
+  key: Buffer;
 
   /**
    * Encrypts a buffer

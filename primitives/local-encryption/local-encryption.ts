@@ -1,15 +1,29 @@
 import crypto from "node:crypto";
 import { Buffer } from "node:buffer";
 import type {
+  LocalEncryptionPrimitives,
   LocalEncryptionResult,
-  LocalEncryptionServicePrimitives,
 } from "./local-encryption.d.ts";
 
-class LocalEncryptionService implements LocalEncryptionServicePrimitives {
+/**
+ * Local encryption utility
+ */
+class LocalEncryption implements LocalEncryptionPrimitives {
+  /**
+   * The encryption key
+   */
   #key: Buffer;
-
+  /**
+   * Getter of `@property #key`
+   */
   get key() {
     return this.#key;
+  }
+  /**
+   * Setter of `@property #key`
+   */
+  set key(key: Buffer) {
+    this.#key = key;
   }
 
   constructor(key: Buffer) {
@@ -33,4 +47,4 @@ class LocalEncryptionService implements LocalEncryptionServicePrimitives {
   }
 }
 
-export { LocalEncryptionService };
+export { LocalEncryption };

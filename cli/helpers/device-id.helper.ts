@@ -2,6 +2,11 @@ import os from "node:os";
 import crypto from "node:crypto";
 import { execSync } from "node:child_process";
 
+/**
+ * Generates a unique device hash
+ *
+ * @returns The device hash
+ */
 export function generateDeviceHash() {
   const osType = os.type();
   const osRelease = os.release();

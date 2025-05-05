@@ -1,7 +1,7 @@
 import crypto from "node:crypto";
 import { assertEquals } from "@std/assert";
 import { cliContext } from "../context.ts";
-import { decryptBuffer, encryptBuffer } from "./local-encryption.helper.ts";
+import LocalEncryptionService from "./local-encryption.service.ts";
 
 cliContext.isAuthenticated = true;
 cliContext.user = {
@@ -23,7 +23,8 @@ cliContext.localEncryptionKey = crypto.randomBytes(32);
 
 Deno.test("Correct encryption and decryption", () => {
   const data = crypto.randomBytes(128);
-  const cipher = encryptBuffer(data);
-  const decrypted = decryptBuffer(cipher);
+  const localEncryptionService = new LocalEncryptionService();
+  const cipher = localEncryptionService.encrypt(data);
+  const decrypted = localEncryptionService.decrypt(cipher);
   assertEquals(data, decrypted);
 });
