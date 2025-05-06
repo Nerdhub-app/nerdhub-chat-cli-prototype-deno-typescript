@@ -205,3 +205,44 @@ export interface XEdDSAPrimitives {
     x25519PublicKey: Buffer,
   ): boolean;
 }
+
+/**
+ * Headers of the X3DH initial message coming from the initiator.
+ */
+export type InitialMessageHeaders = {
+  /**
+   * Public identity key of the initiator as Base64
+   */
+  identityKey: string;
+  /**
+   * Public ephemeral key of the initiator as Base64
+   */
+  ephemeralKey: string;
+  /**
+   * Id of the eventual one-time prekey of the recipient that used by initiator during the X3DH operation.
+   */
+  onetimePreKeyId?: string;
+};
+
+/**
+ * Body of the X3DH initial message coming from the initiator.
+ * Tuple that consists of 3 AES-GCM encryption components as Base64:
+ * [0]: Cipher text of the initial message body
+ * [1]: Initialization Vector (IV) of the initial message's encryption
+ * [2]: Authentication tag of the initial message's encryption
+ */
+export type InitialMessageBody = [string, string, string];
+
+/**
+ * Payload of the X3DH initial message.
+ */
+export type InitialMessagePayload = {
+  /**
+   * Headers
+   */
+  headers: InitialMessageHeaders;
+  /**
+   * Message body
+   */
+  body: InitialMessageBody;
+};
