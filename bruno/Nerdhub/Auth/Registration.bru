@@ -1,0 +1,20 @@
+meta {
+  name: Registration
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{API_BASE_URL}}/auth/register
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "firstName": "Tolotra",
+    "lastName": "Rabefaly",
+    "email": "tolotrarabefaly@gmail.com",
+    "password": "123abcABC*"
+  }
+}

@@ -2,11 +2,6 @@ import type { Buffer } from "node:buffer";
 
 export interface LocalEncryptionKeyManagerPrimitives {
   /**
-   * Generates a random 256-bits encryption key as an `Buffer`
-   */
-  generateKey(): Buffer;
-
-  /**
    * Stores a 256-bits encryption locally as a PEM file
    *
    * @param path The local path to the key's PEM file
@@ -21,12 +16,12 @@ export interface LocalEncryptionKeyManagerPrimitives {
   retrieveKey(path: string): Buffer;
 }
 
-export type LocalEncryptionResult = {
-  cipher: Buffer;
-  iv: Buffer;
-  ad: Buffer;
-  authTag: Buffer;
-};
+/**
+ * Encryption result by the local encryption key.
+ * [0]: The cipher text
+ * [1]: The IV (initialization vector)
+ */
+export type LocalEncryptionResult = [Buffer, Buffer];
 
 export interface LocalEncryptionPrimitives {
   /**
@@ -38,18 +33,15 @@ export interface LocalEncryptionPrimitives {
    * Encrypts a buffer
    *
    * @param data The buffer to encrypt
-   * @param ad The associated data
-   * @return An object containing the encrypted buffer, the associated data and the initialization vector
+   * @return An object containing the encrypted buffer and the initialization vector
    */
-  encrypt(data: Buffer, ad: Buffer): LocalEncryptionResult;
+  encrypt(data: Buffer): LocalEncryptionResult;
 
   /**
    * Decrypts a buffer
    *
-   * @param data The encrypted buffer
-   * @param iv The initialization vector
-   * @param ad The authentication data
+   * @param encryptionResult The encryption result data to decrypt
    * @return The decrypted buffer
    */
-  decrypt(cipher: Buffer, ad: Buffer, iv: Buffer, authTag: Buffer): Buffer;
+  decrypt(encryptionResult: LocalEncryptionResult): Buffer;
 }

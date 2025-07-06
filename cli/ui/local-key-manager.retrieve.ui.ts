@@ -1,3 +1,4 @@
+import path from "node:path";
 import { Input, Select, type SelectOption } from "@cliffy/prompt";
 import { colors } from "@cliffy/ansi/colors";
 import { bottomActionsUI } from "./common/bottom-action.ui.ts";
@@ -5,6 +6,7 @@ import { LocalEncryptionKeyManager } from "../../primitives/local-encryption/loc
 import { cliContext } from "../context.ts";
 import { generateLocalEncryptionKeyPemFilePathForUser } from "../helpers/local-encryption-key.helper.ts";
 import { navigate, type RouteName } from "../router/index.ts";
+import type { LocalManagerUIParams } from "./local-key-manager.ui.ts";
 
 const localKeyManager = new LocalEncryptionKeyManager();
 
@@ -13,7 +15,7 @@ type LocalEncryptionKeyRetrievalMode = "user-based" | "provided";
 type ActionLocalEncryptionKeyNotFound = "retry" | "store" | RouteName;
 
 export default async function localKeyManagerRetrieveUI(
-  params?: Record<string, string>,
+  params?: LocalManagerUIParams,
 ) {
   const mode = await Select.prompt<LocalEncryptionKeyRetrievalMode>({
     message: "How to retrieve your local encryption key `.pem` file?",
@@ -36,12 +38,12 @@ export default async function localKeyManagerRetrieveUI(
     if (cliContext.isAuthenticated && mode === "user-based") {
       keyPath = generateLocalEncryptionKeyPemFilePathForUser(
         cliContext.user.id,
-        cliContext.e2eeParticipant.id,
       );
     } else {
       keyPath = await Input.prompt({
         message: "Enter the full path to the `.pem` file:",
       });
+      keyPath = path.resolve(keyPath);
       console.log();
     }
 
@@ -91,10 +93,15 @@ export default async function localKeyManagerRetrieveUI(
   console.log("Key (base64): " + colors.green(key.toString("base64")));
   console.log();
 
-  // Navigate back to Chats UI if the local encryption manager UI was redirected from Chats UI
-  if (params?.from && params.from === "Chats") {
+  if (
+    params?.from && (params.from.startsWith("Chats") || params.from === "Auth")
+  ) {
+    const routeName = params.from as RouteName;
     navigate({
-      name: params.from,
+      name: routeName,
+      params: {
+        from: params.from,
+      },
     });
   }
 

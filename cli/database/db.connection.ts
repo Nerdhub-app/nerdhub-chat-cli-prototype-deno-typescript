@@ -39,7 +39,6 @@ export function initDatabase(options: InitDatabaseOptions) {
   }
 
   db = new DatabaseSync(dbPath);
-  console.log("SQLite database has been initialized.");
 
   return db;
 }

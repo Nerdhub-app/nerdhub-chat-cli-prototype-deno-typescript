@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "lib": [
+      "deno.window",
+      "deno.unstable",
+      "deno.ns"
+    
+    ]
+  },
+  "tasks": {
+    "seed:prekey_bundle": "deno run -R -W prekey-bundle.seed.ts"
+  }
+}

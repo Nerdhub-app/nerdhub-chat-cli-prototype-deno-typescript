@@ -1,0 +1,23 @@
+meta {
+  name: Create e2ee participant
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{API_BASE_URL}}/users/{{AUTH_USER_ID}}/e2ee_participants
+  body: json
+  auth: inherit
+}
+
+headers {
+  X-Device-Hash: {{DEVICE_HASH}}
+}
+
+body:json {
+  {
+    "pubIdentityKey": "MCowBQYDK2VuAyEA0wmS5C0VJwo79onjROGWjjaaD25yy1YDjC4W1M2wv1U=",
+    "pubSignedPreKey": "MCowBQYDK2VuAyEAXJVOebIi/bMylO6f/+hs3RCqEk1kYM1TqrLUSkPgr3w=",
+    "signedPreKeySignature": "TOqTJYKUhDMj9k2dX5iFsPGq/tPcfYvmf+cuQVUSi+wRoUwNSuHoddmOLAtvJPZkHmb621yAeCgBeZHNYnLnCw=="
+  }
+}

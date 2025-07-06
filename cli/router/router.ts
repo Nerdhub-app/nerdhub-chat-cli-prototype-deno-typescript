@@ -1,8 +1,10 @@
 import { type RouteName, routes } from "./routes.ts";
 
-export type CurrentRouteData = {
+export type CurrentRouteData<
+  TRouteParams extends Record<string, unknown> = Record<string, unknown>,
+> = {
   name: RouteName;
-  params?: Record<string, string>;
+  params?: TRouteParams;
 };
 
 export class RouterNavigationError extends Error {}
@@ -38,7 +40,9 @@ export class CLIRouter {
   }
 }
 
-export function navigate(routeData: CurrentRouteData) {
+export function navigate<
+  TRouteParams extends Record<string, unknown> = Record<string, unknown>,
+>(routeData: CurrentRouteData<TRouteParams>) {
   console.clear();
   CLIRouter.currentRoute = routeData;
   throw new RouterNavigationError();

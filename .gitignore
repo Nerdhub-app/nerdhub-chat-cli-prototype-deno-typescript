@@ -6,3 +6,6 @@ keys/
 
 # Env variables
 .env
+
+# Draw.io backup file
+*.drawio.bkp

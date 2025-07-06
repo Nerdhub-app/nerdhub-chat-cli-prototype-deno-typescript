@@ -6,6 +6,9 @@ import registerUI from "../ui/register.ui.ts";
 import LocalKeyManagerUI from "../ui/local-key-manager.ui.ts";
 import localKeyManagerStoreUI from "../ui/local-key-manager.store.ui.ts";
 import localKeyManagerRetrieveUI from "../ui/local-key-manager.retrieve.ui.ts";
+import authenticatedRoute from "../ui/middlewares/authenticated-route.middleware.ts";
+import requireLocalEncryptionKey from "../ui/middlewares/require-local-encryption-key.middleware.ts";
+import setupPreKeyBundle from "../ui/middlewares/setup-prekey-bundle.middleware.ts";
 
 export type RouteName =
   | "Index"
@@ -20,10 +23,15 @@ export type RouteName =
 
 type MaybePromise<T> = void | Promise<T>;
 
-export type RouteItem = {
+export type RouteRenderer<
+  TRouteParams extends Record<string, unknown> = Record<string, unknown>,
+> = (params?: TRouteParams) => MaybePromise<void>;
+
+export type RouteItem<
+  TRouteParams extends Record<string, unknown> = Record<string, unknown>,
+> = {
   name: RouteName;
-  params?: string[];
-  render: (params?: Record<string, string>) => MaybePromise<void>;
+  render: RouteRenderer<TRouteParams>;
 };
 
 export const routes: RouteItem[] = [
@@ -41,11 +49,19 @@ export const routes: RouteItem[] = [
   },
   {
     name: "Chats",
-    render: () => chatsUI(),
+    render: setupPreKeyBundle(
+      authenticatedRoute(
+        requireLocalEncryptionKey(() => {
+          return chatsUI();
+        }),
+      ),
+    ),
   },
   {
     name: "Chat",
-    render: () => chatUI(),
+    render: setupPreKeyBundle(
+      requireLocalEncryptionKey(authenticatedRoute(() => chatUI())),
+    ),
   },
   {
     name: "LocalKeyManager",

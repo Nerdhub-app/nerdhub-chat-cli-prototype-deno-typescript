@@ -19,9 +19,8 @@ const USER_BASED_LOCAL_ENCRYPTION_KEY_DIR = "/keys";
  */
 export function generateLocalEncryptionKeyPemFilePathForUser(
   userId: string,
-  participantId: string,
 ): string {
-  const ikm = userId + "-" + participantId;
+  const ikm = userId;
   const derivedBuffer = crypto.hkdfSync(
     "sha256",
     ikm,

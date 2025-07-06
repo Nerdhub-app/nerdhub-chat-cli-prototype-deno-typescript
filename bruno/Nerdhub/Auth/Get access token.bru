@@ -1,0 +1,19 @@
+meta {
+  name: Get access token
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{API_BASE_URL}}/auth/access_token
+  body: none
+  auth: inherit
+}
+
+headers {
+  X-Device-Hash: {{DEVICE_HASH}}
+}
+
+body:json {
+  {}
+}

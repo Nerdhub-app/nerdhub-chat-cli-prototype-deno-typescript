@@ -8,6 +8,7 @@ export default async function indexUI() {
   if (cliContext.isAuthenticated) {
     const fullName = `${cliContext.user.firstName} ${cliContext.user.lastName}`;
     console.log(`Welcome back ${colors.blue(fullName)}!`);
+    console.log();
   }
 
   const navigateTo = await Select.prompt<RouteName>({
@@ -20,7 +21,7 @@ export default async function indexUI() {
       },
       { name: "Login", value: "Login", disabled: cliContext.isAuthenticated },
       { name: "Local encryption key manager", value: "LocalKeyManager" },
-      { name: "Chat", value: "Chat", disabled: !cliContext.isAuthenticated },
+      { name: "Chats", value: "Chats", disabled: !cliContext.isAuthenticated },
       { name: "Exit", value: "Exit" },
     ],
   }) as RouteName;

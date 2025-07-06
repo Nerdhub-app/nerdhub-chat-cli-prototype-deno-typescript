@@ -11,9 +11,13 @@ export type User = Entity<{
   lastName: string;
   email: string;
   password: string;
+  e2eeParticipantsIds: string[];
 }>;
 
-export type UserWithoutPassword = Omit<User, "password">;
+export type UserWithoutPassword = Omit<
+  User,
+  "password" | "e2eeParticipantsIds"
+>;
 
 export type UserRegistrationDTO = {
   firstName: string;
@@ -23,25 +27,56 @@ export type UserRegistrationDTO = {
 };
 
 export type UserRegistrationResponseDTO = {
-  user: Omit<User, "password">;
-  e2eeParticipant: E2EEParticipant;
+  user: UserWithoutPassword;
   access_token: string;
 };
 
 export type UserLoginDTO = Record<"email" | "password", string>;
 
-export type UserLoginResponseDTO = UserRegistrationResponseDTO;
-
-export interface AccessTokenPayload extends JWTPayload {
-  e2eeParticipantId: string;
-}
+export type OnetimePreKey = {
+  id: string;
+  pubKey: string; // Public key as base64 string
+  createdAt: number;
+};
 
 export type E2EEParticipant = Entity<{
   userId: string;
   deviceId: string;
+  pubIdentityKey: string; // Public key as base64 string
+  pubSignedPreKey: string; // Public key as base64 string
+  signedPreKeySignature: string; // base64 string
 }>;
 
-export type E2EEParticipantCreationDTO = {
-  userId: string;
-  deviceId: string;
+export type E2EEParticipantWithoutOnetimePreKeys = E2EEParticipant;
+
+export type UserLoginResponseDTO =
+  & UserRegistrationResponseDTO
+  & {
+    e2eeParticipant:
+      | E2EEParticipantWithoutOnetimePreKeys
+      | null;
+  };
+
+export interface AccessTokenPayload extends JWTPayload {
+  sub: string;
+  e2eeParticipantId: string | null;
+}
+
+export type RequestAccessTokenContext = {
+  access_token: string;
+  authUserId: string;
+  e2eeParticipantId: string | null;
+};
+
+export type RequestAuthUserContext = {
+  authUser: User;
+  e2eeParticipant?: E2EEParticipant;
+};
+
+export type RequestDeviceHashContext = {
+  deviceHash: string;
+};
+
+export type RequestE2EEParticipantContext = {
+  e2eeParticipant: E2EEParticipant;
 };

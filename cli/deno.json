@@ -17,5 +17,11 @@
   },
   "tasks": {
     "test": "deno test --allow-sys --allow-env --allow-read"
+  },
+  "compilerOptions": {
+    "lib": [
+      "deno.window",
+      "deno.unstable"
+    ]
   }
 }

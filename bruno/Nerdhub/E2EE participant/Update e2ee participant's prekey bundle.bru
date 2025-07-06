@@ -1,0 +1,19 @@
+meta {
+  name: Update e2ee participant's prekey bundle
+  type: http
+  seq: 3
+}
+
+patch {
+  url: {{API_BASE_URL}}/users/{{AUTH_USER_ID}}/e2ee_participants/{{E2EE_PARTICIPANT_ID}}/prekey_bundle
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "pubIdentityKey": "MCowBQYDK2VuAyEAysfMO1dVP4vy5Q0fAAG+4EjKz+PlVmjcbmx58INg4iA=",
+    "pubSignedPreKey": "MCowBQYDK2VuAyEAc8dQZg3USD1zO9o6T/ono/G0u//1G/DfXdbm/CvOPwE=",
+    "signedPreKeySignature": "bMp/na4YsK3qlsRccZmYFS+w+FN3PSQX8S3lvzXPhf36n7iUXM/8KPALaU52UQPoXmuWsc1nFm7pCEVeqT5RAQ=="
+  }
+}

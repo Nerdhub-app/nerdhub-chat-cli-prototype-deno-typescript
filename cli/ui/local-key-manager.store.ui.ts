@@ -1,17 +1,22 @@
+import crypto from "node:crypto";
 import { Confirm, Input, Select } from "@cliffy/prompt";
 import { cliContext } from "../context.ts";
-import { LocalEncryptionKeyManager } from "@scope/primitives/local-encryption";
+import {
+  ENCRYPTION_KEY_LENGTH,
+  LocalEncryptionKeyManager,
+} from "@scope/primitives/local-encryption";
 import { colors } from "@cliffy/ansi/colors";
 import { bottomActionsUI } from "./common/bottom-action.ui.ts";
 import { generateLocalEncryptionKeyPemFilePathForUser } from "../helpers/local-encryption-key.helper.ts";
 import { navigate } from "../router/router.ts";
+import type { LocalManagerUIParams } from "./local-key-manager.ui.ts";
 
 type LocalEnryptionKeyGenerationMode = "provided" | "user-based";
 
 const localKeyManager = new LocalEncryptionKeyManager();
 
 export default async function localKeyManagerStoreUI(
-  params?: Record<string, string>,
+  params?: LocalManagerUIParams,
 ) {
   const source = await Select.prompt<LocalEnryptionKeyGenerationMode>({
     message:
@@ -31,7 +36,6 @@ export default async function localKeyManagerStoreUI(
   if (cliContext.isAuthenticated && source === "user-based") {
     keyPath = generateLocalEncryptionKeyPemFilePathForUser(
       cliContext.user.id,
-      cliContext.e2eeParticipant.id,
     );
   } else {
     keyPath = await Input.prompt({
@@ -90,7 +94,7 @@ export default async function localKeyManagerStoreUI(
 
   const key = reuseExistingKey
     ? localKeyManager.retrieveKey(keyPath)
-    : localKeyManager.generateKey();
+    : crypto.randomBytes(ENCRYPTION_KEY_LENGTH);
   cliContext.localEncryptionKey = key;
   if (!reuseExistingKey) {
     localKeyManager.storeKey(key, keyPath);

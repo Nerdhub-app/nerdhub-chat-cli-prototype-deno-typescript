@@ -1,9 +1,9 @@
 {
   "tasks": {
-    "dev:server": "deno run --watch --allow-net --allow-env --allow-read --allow-write --unstable-kv --env-file server.ts --kv=./db/server --local-kv",
-    "kv:reset": "deno run --allow-net --allow-read --allow-write --allow-env --env-file --unstable-kv server/database/kv-reset.ts",
-    "dev:cli": "deno run --watch --allow-net --allow-env --allow-sys --allow-run --allow-read --allow-write --env-file cli.ts",
-    "db:reset": "deno run --allow-net --allow-env --allow-sys --allow-run --allow-read --allow-write --env-file cli.ts db-reset",
+    "server:dev": "deno run --watch --allow-net --allow-env --allow-read --allow-write --unstable-kv --env-file server.ts --local-kv",
+    "server:kv:reset": "deno run --allow-net --allow-read --allow-write --allow-env --env-file --unstable-kv server/database/kv-reset.ts",
+    "cli:dev": "deno run --watch --allow-net --allow-env --allow-sys --allow-run --allow-read --allow-write --env-file --unstable-cron cli.ts",
+    "cli:db:reset": "deno run --allow-net --allow-env --allow-sys --allow-run --allow-read --allow-write --env-file --unstable-cron cli.ts db-reset",
     "fmt": "deno fmt",
     "fmt:watch": "deno fmt --watch"
   },
@@ -17,5 +17,5 @@
       "deno.window"
     ]
   },
-  "workspace": ["./server", "./cli", "./primitives"]
+  "workspace": ["./server", "./cli", "./primitives", "./seed"]
 }

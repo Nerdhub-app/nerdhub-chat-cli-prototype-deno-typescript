@@ -1,5 +1,8 @@
 import type {
   AccessTokenPayload,
+  E2EEParticipant,
+  RequestAccessTokenContext,
+  RequestAuthUserContext,
   UserLoginDTO,
   UserLoginResponseDTO,
   UserRegistrationDTO,
@@ -10,39 +13,28 @@ import E2EEParticipantRepository from "../repository/e2ee-participant.repository
 import { createJWT } from "../utils/jwt.utils.ts";
 import { verifyPassword } from "../utils/password.utils.ts";
 import {
-  BearerTokenError,
-  handleBearerToken,
-} from "../middlewares/bearer-token.middleware.ts";
+  HttpReponseStatus,
+  JSONResponse,
+  type MiddlewareNextFn,
+  type MiddlewareRequest,
+} from "../router.ts";
+import AppException from "../helpers/app-exception.helper.ts";
 
 export default class AuthController {
-  static async handleRegistration(req: Request) {
-    const dto = await req.json() as UserRegistrationDTO;
+  static async handleRegistration(
+    req: MiddlewareRequest,
+    _next: MiddlewareNextFn,
+  ) {
+    const dto = await req.body as UserRegistrationDTO;
     const user = await UserRepository.create(dto);
-
-    const deviceHash = req.headers.get("Device-Hash");
-    if (!deviceHash) {
-      return new Response(
-        JSON.stringify({ message: "`Device-Hash` headers is required" }),
-        {
-          status: 400,
-          headers: {
-            "Content-Type": "application/json",
-          },
-        },
-      );
-    }
-    const e2eeParticipant = await E2EEParticipantRepository.create({
-      userId: user.id,
-      deviceId: deviceHash,
-    });
 
     const accessTokenPayload: AccessTokenPayload = {
       sub: user.id,
-      e2eeParticipantId: e2eeParticipant.id,
+      e2eeParticipantId: null,
     };
     const access_token = await createJWT(accessTokenPayload);
 
-    const res: UserRegistrationResponseDTO = {
+    const resBody: UserRegistrationResponseDTO = {
       user: {
         id: user.id,
         firstName: user.firstName,
@@ -51,62 +43,40 @@ export default class AuthController {
         createdAt: user.createdAt,
         updatedAt: user.updatedAt,
       },
-      e2eeParticipant,
       access_token,
     };
-
-    return new Response(JSON.stringify(res), {
-      status: 201,
-    });
+    return new JSONResponse(resBody, HttpReponseStatus.CREATED);
   }
 
-  static async handleLogin(req: Request) {
-    const dto = await req.json() as UserLoginDTO;
-
+  static async handleLogin(req: MiddlewareRequest, next: MiddlewareNextFn) {
+    const dto = await req.body as UserLoginDTO;
     const user = await UserRepository.getByEmail(dto.email);
 
     if (!user || !(await verifyPassword(user.password, dto.password))) {
-      return new Response(
-        JSON.stringify({ message: "Your email or password is wrong" }),
-        {
-          status: 401,
-          headers: {
-            "Content-Type": "application/json",
-          },
-        },
+      next(
+        new AppException({
+          message: "Either your email or your password is wrong",
+          status: HttpReponseStatus.UNAUTHORIZED,
+        }),
       );
+      return;
     }
 
-    const deviceHash = req.headers.get("Device-Hash");
-    if (!deviceHash) {
-      return new Response(
-        JSON.stringify({ message: "`Device-Hash` headers is required" }),
-        {
-          status: 400,
-          headers: {
-            "Content-Type": "application/json",
-          },
-        },
-      );
-    }
-
-    let e2eeParticipant = await E2EEParticipantRepository.getByDeviceId(
-      user.id,
-      deviceHash,
-    );
-    if (!e2eeParticipant) {
-      e2eeParticipant = await E2EEParticipantRepository.create({
-        userId: user.id,
-        deviceId: deviceHash,
-      });
+    let e2eeParticipant: E2EEParticipant | null = null;
+    const deviceHash = req.request.headers.get("X-Device-Hash");
+    if (deviceHash) {
+      e2eeParticipant = await E2EEParticipantRepository.getByDeviceId([
+        user.id,
+        deviceHash,
+      ]);
     }
 
     const access_token = await createJWT<AccessTokenPayload>({
       sub: user.id,
-      e2eeParticipantId: e2eeParticipant.id,
+      e2eeParticipantId: e2eeParticipant?.id ?? null,
     });
 
-    const body: UserLoginResponseDTO = {
+    const resBody: UserLoginResponseDTO = {
       user: {
         id: user.id,
         firstName: user.firstName,
@@ -115,74 +85,77 @@ export default class AuthController {
         createdAt: user.createdAt,
         updatedAt: user.updatedAt,
       },
-      e2eeParticipant,
+      e2eeParticipant: e2eeParticipant
+        ? {
+          id: e2eeParticipant.id,
+          userId: e2eeParticipant.userId,
+          deviceId: e2eeParticipant.deviceId,
+          pubIdentityKey: e2eeParticipant.pubIdentityKey,
+          pubSignedPreKey: e2eeParticipant.pubSignedPreKey,
+          signedPreKeySignature: e2eeParticipant.signedPreKeySignature,
+          createdAt: e2eeParticipant.createdAt,
+          updatedAt: e2eeParticipant.updatedAt,
+        }
+        : null,
       access_token,
     };
-    return new Response(JSON.stringify(body));
+    return resBody;
   }
 
-  static async handleGetAuthUser(req: Request) {
-    try {
-      const { payload, access_token } = await handleBearerToken(req);
+  static handleGetAuthUser(
+    req: MiddlewareRequest,
+    _next: MiddlewareNextFn,
+  ) {
+    const { authUser, e2eeParticipant, access_token } = req.context as
+      & RequestAccessTokenContext
+      & RequestAuthUserContext;
+    const resBody: UserLoginResponseDTO = {
+      user: {
+        id: authUser.id,
+        firstName: authUser.firstName,
+        lastName: authUser.lastName,
+        email: authUser.email,
+        createdAt: authUser.createdAt,
+        updatedAt: authUser.updatedAt,
+      },
+      e2eeParticipant: e2eeParticipant
+        ? {
+          id: e2eeParticipant.id,
+          userId: e2eeParticipant.userId,
+          deviceId: e2eeParticipant.deviceId,
+          pubIdentityKey: e2eeParticipant.pubIdentityKey,
+          pubSignedPreKey: e2eeParticipant.pubSignedPreKey,
+          signedPreKeySignature: e2eeParticipant.signedPreKeySignature,
+          createdAt: e2eeParticipant.createdAt,
+          updatedAt: e2eeParticipant.updatedAt,
+        }
+        : null,
+      access_token,
+    };
+    return resBody;
+  }
 
-      const user = await UserRepository.getById(payload.sub as string);
-      if (!user) {
-        return new Response(
-          JSON.stringify({ message: "The authenticated user is not found" }),
-          {
-            status: 404,
-            headers: {
-              "Content-Type": "application/json",
-            },
-          },
-        );
-      }
+  static async handleGetAccessToken(
+    req: MiddlewareRequest,
+    _next: MiddlewareNextFn,
+  ) {
+    const { authUser } = req.context as (RequestAuthUserContext);
 
-      const e2eeParticipant = await E2EEParticipantRepository.getById(
-        user.id,
-        payload.e2eeParticipantId,
+    let e2eeParticipant: E2EEParticipant | null = null;
+    const deviceHash = req.request.headers.get("X-Device-Hash");
+    if (deviceHash) {
+      e2eeParticipant = await E2EEParticipantRepository.getByDeviceId(
+        [authUser.id, deviceHash],
       );
-      if (!e2eeParticipant) {
-        return new Response(
-          JSON.stringify({
-            message: "The end-to-end participant is not found",
-          }),
-          {
-            status: 404,
-            headers: {
-              "Content-Type": "application/json",
-            },
-          },
-        );
-      }
-
-      const body: UserLoginResponseDTO = {
-        user: {
-          id: user.id,
-          firstName: user.firstName,
-          lastName: user.lastName,
-          email: user.email,
-          createdAt: user.createdAt,
-          updatedAt: user.updatedAt,
-        },
-        e2eeParticipant,
-        access_token,
-      };
-      return new Response(JSON.stringify(body), {
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-    } catch (error) {
-      if (error instanceof BearerTokenError) {
-        return new Response(JSON.stringify({ message: error.message }), {
-          status: 401,
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
-      }
-      throw error;
     }
+
+    const access_token = await createJWT<AccessTokenPayload>({
+      sub: authUser.id,
+      e2eeParticipantId: e2eeParticipant?.id ?? null,
+    });
+
+    return { access_token };
   }
+
+  static async handleE2EEParticipantRegistration() {}
 }

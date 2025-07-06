@@ -1,16 +1,12 @@
+import crypto from "node:crypto";
 import path from "node:path";
 import { assert, assertEquals } from "@std/assert";
 import { LocalEncryptionKeyManager } from "./local-encryption-key.manager.ts";
-
-Deno.test("Generated key is 32 bytes length", () => {
-  const keyManager = new LocalEncryptionKeyManager();
-  const key = keyManager.generateKey();
-  assertEquals(key.length, 32);
-});
+import { ENCRYPTION_KEY_LENGTH } from "./local-encryption.ts";
 
 Deno.test("Creates an AES key file", () => {
   const keyManager = new LocalEncryptionKeyManager();
-  const key = keyManager.generateKey();
+  const key = crypto.randomBytes(ENCRYPTION_KEY_LENGTH);
   const storagePath = path.resolve("./temp-test-key.pem");
   keyManager.storeKey(key, storagePath);
   try {
@@ -24,7 +20,7 @@ Deno.test("Creates an AES key file", () => {
 
 Deno.test("Retrieves stored key", () => {
   const keyManager = new LocalEncryptionKeyManager();
-  const key = keyManager.generateKey();
+  const key = crypto.randomBytes(ENCRYPTION_KEY_LENGTH);
   const storagePath = path.resolve("./temp-test-key.pem");
   keyManager.storeKey(key, storagePath);
   try {

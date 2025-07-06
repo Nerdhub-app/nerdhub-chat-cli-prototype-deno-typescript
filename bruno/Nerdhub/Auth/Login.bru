@@ -1,0 +1,22 @@
+meta {
+  name: Login
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{API_BASE_URL}}/auth/login
+  body: json
+  auth: inherit
+}
+
+headers {
+  X-Device-Hash: {{DEVICE_HASH}}
+}
+
+body:json {
+  {
+    "email": "tolotrarabefaly@gmail.com",
+    "password": "123abcABC*"
+  }
+}

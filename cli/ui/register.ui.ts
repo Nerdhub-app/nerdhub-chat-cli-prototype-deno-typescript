@@ -1,12 +1,15 @@
 import { Confirm, Input, prompt } from "@cliffy/prompt";
 import { colors } from "@cliffy/ansi/colors";
 import { cliContext } from "../context.ts";
-import type { UserRegistrationResponseDTO } from "@scope/server/types";
 import { navigate } from "../router/router.ts";
 import AuthAPI from "../api/auth.api.ts";
-import { bottomActionsUI } from "./common/bottom-action.ui.ts";
+import type { LocalManagerUIParams } from "./local-key-manager.ui.ts";
 
-export default async function registerUI() {
+export type RegisterRouteParams = {
+  from?: `Chats${string}`;
+};
+
+export default async function registerUI(params?: RegisterRouteParams) {
   let isSuccess = false;
 
   while (!isSuccess) {
@@ -58,19 +61,22 @@ export default async function registerUI() {
       });
     }
 
-    const res = await AuthAPI.register(prompts as Required<typeof prompts>);
-
-    if (!res.ok) {
+    let res: Awaited<ReturnType<typeof AuthAPI.register>>;
+    try {
+      res = await AuthAPI.register(prompts as Required<typeof prompts>);
+    } catch (_) {
       console.log(colors.red("Registration failed."));
 
       const tryAgain = await Confirm.prompt("Do you want to try again?");
       if (tryAgain) continue;
-      else navigate({ name: "Index" });
+      else {
+        navigate({ name: "Index" });
+        return;
+      }
     }
 
     isSuccess = true;
-    const { user, access_token } =
-      (await res.json()) as UserRegistrationResponseDTO;
+    const { user, access_token } = res.bodyJSON;
 
     console.log("User details:");
     console.table(user);
@@ -81,5 +87,10 @@ export default async function registerUI() {
     cliContext.jwt = access_token;
   }
 
-  await bottomActionsUI();
+  navigate<LocalManagerUIParams>({
+    name: "LocalKeyManager",
+    params: {
+      from: params?.from,
+    },
+  });
 }

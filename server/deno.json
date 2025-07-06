@@ -1,7 +1,7 @@
 {
   "name": "@scope/server",
   "exports": {
-    ".": "./controller/index.ts",
+    ".": "./server.ts",
     "./controller": "./controller/index.ts",
     "./types": "./server.d.ts",
     "./kv": "./kv.connection.ts"

@@ -1,4 +1,4 @@
 import AuthController from "./auth.controller.ts";
-import ChatController from "./chat.controller.ts";
+import RealTimeController from "./real-time.controller.ts";
 
-export { AuthController, ChatController };
+export { AuthController, RealTimeController };

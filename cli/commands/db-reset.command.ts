@@ -8,6 +8,7 @@ const dbResetCommand = new Command()
   .description("Resets the database")
   .action(() => {
     runMigrations(db, true);
+    Deno.exit();
   });
 
 export default dbResetCommand;

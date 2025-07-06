@@ -1,9 +1,6 @@
-import crypto from "node:crypto";
 import { Buffer } from "node:buffer";
 import path from "node:path";
 import type { LocalEncryptionKeyManagerPrimitives } from "./local-encryption.d.ts";
-
-const KEY_BYTES_LENGTH = 32;
 
 class LocalEncryptionKeyNotFoundError extends Error {
   constructor(message: string) {
@@ -15,10 +12,6 @@ class LocalEncryptionKeyManager implements LocalEncryptionKeyManagerPrimitives {
   #contentEncoder = new TextEncoder();
 
   #contentDecoder = new TextDecoder();
-
-  generateKey() {
-    return crypto.randomBytes(KEY_BYTES_LENGTH);
-  }
 
   storeKey(key: Buffer, _path: string) {
     const base64Key = key.toString("base64");
@@ -42,7 +35,7 @@ class LocalEncryptionKeyManager implements LocalEncryptionKeyManagerPrimitives {
     }
 
     const base64Key = matches[1];
-    return Buffer.from(base64Key);
+    return Buffer.from(base64Key, "base64");
   }
 }
 

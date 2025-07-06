@@ -4,16 +4,24 @@ import type { RouteName } from "../router/routes.ts";
 import { navigate } from "../router/index.ts";
 import { cliContext } from "../context.ts";
 
+export type LocalManagerUIParams = {
+  from?: `Chats${string}` | "Auth";
+  message?: string;
+};
+
 export default async function LocalKeyManagerUI(
-  params?: Record<string, string>,
+  params?: LocalManagerUIParams,
 ) {
+  if (params?.message) {
+    console.log(params.message);
+    console.log();
+  }
+
   console.log("Local encryption key manager:");
   console.log();
   if (cliContext.localEncryptionKey) {
-    console.log(
-      "Your current encryption key is: " +
-        cliContext.localEncryptionKey.toString("base64"),
-    );
+    const key = colors.green(cliContext.localEncryptionKey.toString("base64"));
+    console.log(`Your current encryption key is: ${key}`);
   }
   const navigateTo = await Select.prompt<RouteName>({
     message: "What do you want do?",

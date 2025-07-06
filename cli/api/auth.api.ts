@@ -1,42 +1,58 @@
 import type { UserLoginDTO, UserRegistrationDTO } from "@scope/server/types";
 import { cliContext } from "../context.ts";
+import ApiFetch from "../helpers/api-fetch.helper.ts";
+import type {
+  UserLoginResponseDTO,
+  UserRegistrationResponseDTO,
+} from "../cli.d.ts";
+
+export const AUTH_ENDPOINT = "/auth";
 
 export default class AuthAPI {
   static register(dto: UserRegistrationDTO) {
-    const registerURL = cliContext.serverURL + "/register";
-    return fetch(registerURL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Device-Hash": cliContext.deviceHash,
+    const endpoint = AUTH_ENDPOINT + "/register";
+    return ApiFetch.post<UserRegistrationDTO, UserRegistrationResponseDTO>(
+      endpoint,
+      dto,
+      {
+        deviceHash: cliContext.deviceHash,
       },
-      body: JSON.stringify({
-        firstName: dto.firstName,
-        lastName: dto.lastName,
-        email: dto.email,
-        password: dto.password,
-      }),
-    });
+    );
   }
 
   static login(credentials: UserLoginDTO) {
-    const loginURL = cliContext.serverURL + "/login";
-    return fetch(loginURL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Device-Hash": cliContext.deviceHash,
+    const endpoint = AUTH_ENDPOINT + "/login";
+    return ApiFetch.post<UserLoginDTO, UserLoginResponseDTO>(
+      endpoint,
+      credentials,
+      {
+        deviceHash: cliContext.deviceHash,
       },
-      body: JSON.stringify(credentials),
-    });
+    );
   }
 
   static getAuthUser() {
-    const meURL = cliContext.serverURL + "/me";
-    return fetch(meURL, {
-      headers: {
-        "Authorization": `Bearer ${cliContext.jwt}`,
-      },
+    if (!cliContext.jwt) {
+      throw new Error(
+        "Cannot fetch the authenticated user without the context's JWT",
+      );
+    }
+    const endpoint = AUTH_ENDPOINT + "/me";
+    return ApiFetch.get<UserLoginResponseDTO>(endpoint, {
+      bearerToken: cliContext.jwt,
+    });
+  }
+
+  static getAccessToken() {
+    if (!cliContext.jwt) {
+      throw new Error(
+        "Cannot get a new access token without the context's JWT",
+      );
+    }
+    const endpoint = AUTH_ENDPOINT + "/access_token";
+    return ApiFetch.get<{ access_token: string }>(endpoint, {
+      bearerToken: cliContext.jwt,
+      deviceHash: cliContext.deviceHash,
     });
   }
 }
