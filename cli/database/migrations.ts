@@ -9,7 +9,7 @@ type TableMigrationLifecycles = {
 const migrations: Record<string, TableMigrationLifecycles> = {
   e2eeParticipantOnetimePreKeys: {
     up(db) {
-      const sql = `
+      let sql = `
       CREATE TABLE IF NOT EXISTS e2ee_participant_onetime_prekeys (
         id TEXT NOT NULL PRIMARY KEY,
         pub_key BLOB NOT NULL,
@@ -20,6 +20,16 @@ const migrations: Record<string, TableMigrationLifecycles> = {
         created_at INT NOT NULL,
         updated_at INT NOT NULL
       )
+      `;
+      db.exec(sql);
+      sql = `
+      CREATE INDEX idx_e2ee_participant_onetime_prekeys_user_id_is_published
+      ON e2ee_participant_onetime_prekeys (user_id, is_published)
+      `;
+      db.exec(sql);
+      sql = `
+      CREATE INDEX idx_e2ee_participant_onetime_prekeys_user_id_created_at
+      ON e2ee_participant_onetime_prekeys (user_id, created_at)
       `;
       db.exec(sql);
     },
