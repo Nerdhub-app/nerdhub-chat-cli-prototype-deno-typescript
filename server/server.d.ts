@@ -80,3 +80,8 @@ export type RequestDeviceHashContext = {
 export type RequestE2EEParticipantContext = {
   e2eeParticipant: E2EEParticipant;
 };
+
+export type DBTableName =
+  | "users"
+  | "e2ee_participants"
+  | "e2ee_participant_onetime_prekeys";

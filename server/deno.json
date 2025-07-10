@@ -15,6 +15,7 @@
   },
   "imports": {
     "@std/ulid": "jsr:@std/ulid@^1.0.0",
-    "jose": "npm:jose@^6.0.8"
+    "jose": "npm:jose@^6.0.8",
+    "mysql2": "npm:mysql2@^3.14.1"
   }
 }

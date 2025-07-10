@@ -1,5 +1,5 @@
 import { parseArgs } from "@std/cli";
-import { initKV } from "./database/kv.connection.ts";
+// import { initKV } from "./database/kv.connection.ts";
 import createRouter from "./router.ts";
 import AuthController from "./controller/auth.controller.ts";
 import RealTimeController from "./controller/real-time.controller.ts";
@@ -12,6 +12,13 @@ import requireDeviceHash from "./middlewares/require-device-hash.middleware.ts";
 import e2eeParticipantMustExist from "./middlewares/e2ee-participant-must-exist.middleware.ts";
 import e2eeParticipantIdParamMatchesAuthE2EEParticipant from "./middlewares/e2ee-participant-id-param-matches.middleware.ts";
 import E2EEParticipantOnetimePreKeysController from "./controller/e2ee-participant-onetime-prekeys.controller.ts";
+
+// #region MySQL connection
+
+import "./database/db.connection.ts";
+console.log("Connected the MySQL database ...");
+
+// #endregion
 
 // #region Deno args
 
@@ -26,14 +33,14 @@ const args = parseArgs(Deno.args, {
 
 // #endregion
 
-// #region KV database setup
+// // #region KV database setup
 
-await initKV({
-  isLocal: args["local-kv"],
-  path: args.kv,
-});
+// await initKV({
+//   isLocal: args["local-kv"],
+//   path: args.kv,
+// });
 
-// #endregion
+// // #endregion
 
 // #region Routing
 
