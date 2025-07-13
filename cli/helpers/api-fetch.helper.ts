@@ -36,7 +36,6 @@ export async function wrapFetchResponse<TBody extends object>(
     bodyJSON: bodyJSON,
   };
   if (!response.ok) {
-    console.log(wrappedResponse);
     throw new WrappedFetchResponseError<TBody>(wrappedResponse);
   }
   return wrappedResponse;
