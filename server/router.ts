@@ -13,6 +13,7 @@ export enum HttpReponseStatus {
   FORBIDDEN = 403,
   NOT_FOUND = 404,
   UNSUPPORTED_MEDIA_TYPE = 415,
+  UNPROCESSABLE_ENTITY = 422,
   INTERNAL_SERVER_ERROR = 500,
   NOT_IMPLEMENTED = 501,
 }
@@ -255,11 +256,19 @@ export class Router {
     let reqBody: object | null = null;
     if (request.body) {
       if (!request.headers.get("Content-Type")?.includes("application/json")) {
-        return new JSONResponse({
+        const { response } = new JSONResponse({
           message: "Only the 'application/json' content-type is allowed",
-        }, HttpReponseStatus.UNSUPPORTED_MEDIA_TYPE).response;
+        }, HttpReponseStatus.UNSUPPORTED_MEDIA_TYPE);
+        return response;
       }
-      reqBody = await request.json();
+      try {
+        reqBody = await request.json();
+      } catch (_) {
+        const { response } = new JSONResponse({
+          message: "Failed to parse the request body into JSON",
+        }, HttpReponseStatus.BAD_REQUEST);
+        return response;
+      }
     }
     let middlewareRequest: MiddlewareRequest | null = null;
 
