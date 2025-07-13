@@ -5,12 +5,11 @@ import {
   type MiddlewareNextFn,
   type MiddlewareRequest,
 } from "../router.ts";
+import type { RequestE2EEParticipantContext } from "@scope/server/types";
 import type {
-  RequestAuthUserContext,
-  RequestE2EEParticipantContext,
-} from "@scope/server/types";
-
-type CreateManyOnetimePreKeysDTO = { id: string; pubKey: string }[];
+  CreateManyOnetimePreKeysRequestPayload,
+  CreateManyOnetimePreKeysResponsePayload,
+} from "@scope/server/payload";
 
 type CreateManyOnetimePreKeysRequestQuery = {
   append?: string;
@@ -21,21 +20,19 @@ export default class E2EEParticipantOnetimePreKeysController {
     req: MiddlewareRequest,
     _next: MiddlewareNextFn,
   ) {
-    const { authUser, e2eeParticipant } = req.context as
-      & RequestAuthUserContext
-      & RequestE2EEParticipantContext;
-    const dto = req.body as CreateManyOnetimePreKeysDTO;
+    const { e2eeParticipant } = req.context as RequestE2EEParticipantContext;
+    const payload = req.body as CreateManyOnetimePreKeysRequestPayload;
     const query = req.query as CreateManyOnetimePreKeysRequestQuery;
 
-    const onetimePreKeys = query.append
-      ? await E2EEParticipantOnetimePreKeysRepository
-        .appendManyForParticipant(
-          [authUser.id, e2eeParticipant.id],
-          dto,
-        )
-      : await E2EEParticipantOnetimePreKeysRepository
-        .createMany([authUser.id, e2eeParticipant.id], dto);
+    await E2EEParticipantOnetimePreKeysRepository.createManyByParticipantId(
+      e2eeParticipant.id,
+      payload,
+      !!query.append,
+    );
 
-    return new JSONResponse(onetimePreKeys, HttpReponseStatus.CREATED);
+    const resBody: CreateManyOnetimePreKeysResponsePayload =
+      await E2EEParticipantOnetimePreKeysRepository
+        .findManyByParticipantId(e2eeParticipant.id);
+    return new JSONResponse(resBody, HttpReponseStatus.CREATED);
   }
 }

@@ -13,7 +13,7 @@ export default function userIdRequestParamMatchesAuthUser(
   const { userId } = req.params as { userId: string };
   const { authUser } = req.context as RequestAuthUserContext;
 
-  if (userId !== authUser.id) {
+  if (parseInt(userId) !== authUser.id) {
     next(
       new AppException({
         message:

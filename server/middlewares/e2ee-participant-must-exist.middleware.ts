@@ -7,7 +7,6 @@ import {
 } from "../router.ts";
 import type {
   RequestAccessTokenContext,
-  RequestAuthUserContext,
   RequestE2EEParticipantContext,
 } from "@scope/server/types";
 
@@ -17,21 +16,21 @@ export default async function e2eeParticipantMustExist(
 ) {
   const context = req.context as
     & RequestAccessTokenContext
-    & RequestAuthUserContext
     & RequestE2EEParticipantContext;
 
   if (!context.e2eeParticipantId) {
     next(
       new AppException({
         status: HttpReponseStatus.UNAUTHORIZED,
-        message: "Your access token is missing the `e2eeParticipantId` claim",
+        message:
+          "The `e2eeParticipantId` claim is not set in your access token",
       }),
     );
     return;
   }
 
-  const e2eeParticipant = await E2EEParticipantRepository.getById(
-    [context.authUser.id, context.e2eeParticipantId],
+  const e2eeParticipant = await E2EEParticipantRepository.findById(
+    context.e2eeParticipantId,
   );
 
   if (!e2eeParticipant) {

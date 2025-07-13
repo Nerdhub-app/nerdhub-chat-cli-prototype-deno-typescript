@@ -27,7 +27,7 @@ export default async function requireBearerToken(
     const access_token = authHeader.replace("Bearer ", "");
     const payload = await verifyJWT(access_token) as AccessTokenPayload;
     const context = req.context as RequestAccessTokenContext;
-    context.authUserId = payload.sub;
+    if (payload.sub) context.authUserId = parseInt(payload.sub);
     context.e2eeParticipantId = payload.e2eeParticipantId;
     context.access_token = access_token;
     next();

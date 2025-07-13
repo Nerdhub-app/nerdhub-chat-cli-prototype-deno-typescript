@@ -1,78 +1,84 @@
-import { kv } from "../database/kv.connection.ts";
-import type { OnetimePreKey } from "@scope/server/types";
+import type { ResultSetHeader } from "mysql2/promise";
+import getConnectionsPool from "../database/db.pool.ts";
+import type { DBTableName, OnetimePreKey } from "@scope/server/types";
 
-export type CreateManyOnetimePreKeysPayload = { id: string; pubKey: string }[];
-
-export type AppendManyOnetimePreKeysPayload = CreateManyOnetimePreKeysPayload;
-
-const ROOT_KEYSPACE = "e2eeParticipantOnetimePreKeys";
+const tableName: DBTableName = "e2ee_participant_onetime_prekeys";
 
 export default class E2EEParticipantOnetimePreKeysRepository {
-  /**
-   * @param keys The keyspace keys.
-   * [0]: userId, [1]: participantId
-   */
-  static async getForParticipant(
-    keys: [string, string],
+  static async findManyByParticipantId(
+    participantId: number,
   ): Promise<OnetimePreKey[]> {
-    const onetimePreKeys = await kv.get<OnetimePreKey[]>([
-      ROOT_KEYSPACE,
-      ...keys,
-    ]);
-    return onetimePreKeys.value ?? [];
+    const sql = `
+    SELECT * FROM ${tableName}
+    WHERE participant_id = ?
+    ORDER BY created_at ASC
+    `;
+    const [rows] = await getConnectionsPool().execute(sql, [participantId]);
+    return rows as OnetimePreKey[];
   }
 
-  /**
-   * @param keys The keyspace keys.
-   * [0]: userId, [1]: participantId
-   */
-  static async createMany(
-    keys: [string, string],
-    onetimePreKeysPayload: CreateManyOnetimePreKeysPayload,
-  ): Promise<OnetimePreKey[]> {
-    const onetimePreKeys = onetimePreKeysPayload.map<OnetimePreKey>((opk) => ({
-      ...opk,
-      createdAt: Date.now(),
-    }));
-    await kv.set([ROOT_KEYSPACE, ...keys], onetimePreKeys);
-    return onetimePreKeys;
-  }
+  static async createManyByParticipantId(
+    participantId: number,
+    dto: CreateManyOnetimePreKeysDTO,
+    flush = false,
+  ): Promise<ResultSetHeader> {
+    const conn = await getConnectionsPool().getConnection();
 
-  static async appendManyForParticipant(
-    keys: [string, string],
-    onetimePreKeysPayload: AppendManyOnetimePreKeysPayload,
-  ) {
-    let newOPKs!: OnetimePreKey[];
-    let writeRes = { ok: false };
-    while (!writeRes.ok) {
-      const onetimePreKeysRes = await kv.get<OnetimePreKey[]>([
-        ROOT_KEYSPACE,
-        ...keys,
-      ]);
-      const onetimePreKeys = onetimePreKeysRes.value ?? [];
-      const opkIds = new Set(onetimePreKeys.map((opk) => opk.id));
-      newOPKs = [];
-      for (const opk of onetimePreKeysPayload) {
-        if (opkIds.has(opk.id)) continue;
-        newOPKs.push({ ...opk, createdAt: Date.now() });
-      }
-      onetimePreKeys.concat(...newOPKs);
-      writeRes = await kv.atomic()
-        .check(onetimePreKeysRes)
-        .set(
-          [ROOT_KEYSPACE, ...keys],
-          onetimePreKeys,
-        )
-        .commit();
+    await conn.beginTransaction();
+
+    if (flush) {
+      const sql = `
+      DELETE FROM ${tableName}
+      WHERE participant_id = ?
+      `;
+      await conn.execute(sql, [participantId]);
     }
-    return newOPKs;
+
+    const valuesPlaceholder = dto.reduce((p, _, i) => {
+      return p + (i > 0 ? ", " : "") + "(?, ?)";
+    }, "");
+    const sql = `
+    INSERT INTO ${tableName} (pub_key, participant_id)
+    VALUES ${valuesPlaceholder}
+    `;
+    const values = dto.flatMap((opk) => [opk.pubKey, participantId]);
+    const [result] = await conn.execute(sql, values);
+
+    await conn.commit();
+
+    conn.release();
+
+    return result as ResultSetHeader;
   }
 
-  /**
-   * @param keys The keyspace keys.
-   * [0]: userId, [1]: participantId
-   */
-  static async deleteForParticipant(keys: [string, string]) {
-    await kv.delete([ROOT_KEYSPACE, ...keys]);
+  static async popByParticipantId(
+    participantId: number,
+  ): Promise<OnetimePreKey | null> {
+    const conn = await getConnectionsPool().getConnection();
+
+    let sql = `
+    SELECT * FROM ${tableName}
+    WHERE participant_id = ?
+    ORDER BY created_at ASC
+    LIMIT 1
+    `;
+    const [rows] = await conn.execute(sql, [participantId]);
+    const [opk] = rows as OnetimePreKey[];
+
+    if (opk) {
+      sql = `
+      DELETE FROM ${tableName}
+      WHERE id = ?
+      `;
+      await conn.execute(sql, [opk.id]);
+    }
+
+    await conn.commit();
+
+    conn.release();
+
+    return opk ?? null;
   }
 }
+
+export type CreateManyOnetimePreKeysDTO = { id: string; pubKey: string }[];

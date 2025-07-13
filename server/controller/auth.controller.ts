@@ -3,15 +3,14 @@ import type {
   E2EEParticipant,
   RequestAccessTokenContext,
   RequestAuthUserContext,
-  UserLoginDTO,
-  UserLoginResponseDTO,
-  UserRegistrationDTO,
-  UserRegistrationResponseDTO,
+  User,
 } from "../server.d.ts";
-import UserRepository from "../repository/user.repository.ts";
+import UserRepository, {
+  type CreateUserDTO,
+} from "../repository/user.repository.ts";
 import E2EEParticipantRepository from "../repository/e2ee-participant.repository.ts";
 import { createJWT } from "../utils/jwt.utils.ts";
-import { verifyPassword } from "../utils/password.utils.ts";
+import { hashPassword, verifyPassword } from "../utils/password.utils.ts";
 import {
   HttpReponseStatus,
   JSONResponse,
@@ -19,29 +18,43 @@ import {
   type MiddlewareRequest,
 } from "../router.ts";
 import AppException from "../helpers/app-exception.helper.ts";
+import type {
+  UserLoginRequestPayload,
+  UserLoginResponsePayload,
+  UserRegistrationRequestPayload,
+  UserRegistrationResponsePayload,
+} from "@scope/server/payload";
 
 export default class AuthController {
   static async handleRegistration(
     req: MiddlewareRequest,
     _next: MiddlewareNextFn,
   ) {
-    const dto = await req.body as UserRegistrationDTO;
-    const user = await UserRepository.create(dto);
+    const payload = await req.body as UserRegistrationRequestPayload;
+
+    const dto: CreateUserDTO = {
+      ...payload,
+      password: await hashPassword(payload.password),
+    };
+    const result = await UserRepository.create(dto);
+    const user = await UserRepository.findById(result.insertId) as User;
 
     const accessTokenPayload: AccessTokenPayload = {
-      sub: user.id,
+      sub: user.id.toString(),
       e2eeParticipantId: null,
     };
     const access_token = await createJWT(accessTokenPayload);
 
-    const resBody: UserRegistrationResponseDTO = {
+    const resBody: UserRegistrationResponsePayload = {
       user: {
         id: user.id,
-        firstName: user.firstName,
-        lastName: user.lastName,
+        firstname: user.firstname,
+        lastname: user.lastname,
+        username: user.username,
         email: user.email,
-        createdAt: user.createdAt,
-        updatedAt: user.updatedAt,
+        has_e2ee_participant: user.has_e2ee_participant,
+        created_at: user.created_at,
+        updated_at: user.updated_at,
       },
       access_token,
     };
@@ -49,10 +62,10 @@ export default class AuthController {
   }
 
   static async handleLogin(req: MiddlewareRequest, next: MiddlewareNextFn) {
-    const dto = await req.body as UserLoginDTO;
-    const user = await UserRepository.getByEmail(dto.email);
+    const payload = await req.body as UserLoginRequestPayload;
+    const user = await UserRepository.findByEmail(payload.email);
 
-    if (!user || !(await verifyPassword(user.password, dto.password))) {
+    if (!user || !(await verifyPassword(user.password, payload.password))) {
       next(
         new AppException({
           message: "Either your email or your password is wrong",
@@ -65,71 +78,58 @@ export default class AuthController {
     let e2eeParticipant: E2EEParticipant | null = null;
     const deviceHash = req.request.headers.get("X-Device-Hash");
     if (deviceHash) {
-      e2eeParticipant = await E2EEParticipantRepository.getByDeviceId([
+      e2eeParticipant = await E2EEParticipantRepository.findByUserIdAndDeviceId(
         user.id,
         deviceHash,
-      ]);
+      );
     }
 
     const access_token = await createJWT<AccessTokenPayload>({
-      sub: user.id,
+      sub: user.id.toString(),
       e2eeParticipantId: e2eeParticipant?.id ?? null,
     });
 
-    const resBody: UserLoginResponseDTO = {
+    const resBody: UserLoginResponsePayload = {
       user: {
         id: user.id,
-        firstName: user.firstName,
-        lastName: user.lastName,
+        firstname: user.firstname,
+        lastname: user.lastname,
+        username: user.username,
         email: user.email,
-        createdAt: user.createdAt,
-        updatedAt: user.updatedAt,
+        has_e2ee_participant: user.has_e2ee_participant,
+        created_at: user.created_at,
+        updated_at: user.updated_at,
       },
-      e2eeParticipant: e2eeParticipant
-        ? {
-          id: e2eeParticipant.id,
-          userId: e2eeParticipant.userId,
-          deviceId: e2eeParticipant.deviceId,
-          pubIdentityKey: e2eeParticipant.pubIdentityKey,
-          pubSignedPreKey: e2eeParticipant.pubSignedPreKey,
-          signedPreKeySignature: e2eeParticipant.signedPreKeySignature,
-          createdAt: e2eeParticipant.createdAt,
-          updatedAt: e2eeParticipant.updatedAt,
-        }
-        : null,
+      e2eeParticipant,
       access_token,
     };
     return resBody;
   }
 
-  static handleGetAuthUser(
+  static async handleGetAuthUser(
     req: MiddlewareRequest,
     _next: MiddlewareNextFn,
   ) {
-    const { authUser, e2eeParticipant, access_token } = req.context as
+    const { authUser, access_token, e2eeParticipantId } = req.context as
       & RequestAccessTokenContext
       & RequestAuthUserContext;
-    const resBody: UserLoginResponseDTO = {
+
+    const e2eeParticipant = e2eeParticipantId
+      ? await E2EEParticipantRepository.findById(e2eeParticipantId)
+      : null;
+
+    const resBody: UserLoginResponsePayload = {
       user: {
         id: authUser.id,
-        firstName: authUser.firstName,
-        lastName: authUser.lastName,
+        firstname: authUser.firstname,
+        lastname: authUser.lastname,
+        username: authUser.username,
         email: authUser.email,
-        createdAt: authUser.createdAt,
-        updatedAt: authUser.updatedAt,
+        has_e2ee_participant: authUser.has_e2ee_participant,
+        created_at: authUser.created_at,
+        updated_at: authUser.updated_at,
       },
-      e2eeParticipant: e2eeParticipant
-        ? {
-          id: e2eeParticipant.id,
-          userId: e2eeParticipant.userId,
-          deviceId: e2eeParticipant.deviceId,
-          pubIdentityKey: e2eeParticipant.pubIdentityKey,
-          pubSignedPreKey: e2eeParticipant.pubSignedPreKey,
-          signedPreKeySignature: e2eeParticipant.signedPreKeySignature,
-          createdAt: e2eeParticipant.createdAt,
-          updatedAt: e2eeParticipant.updatedAt,
-        }
-        : null,
+      e2eeParticipant,
       access_token,
     };
     return resBody;
@@ -144,18 +144,17 @@ export default class AuthController {
     let e2eeParticipant: E2EEParticipant | null = null;
     const deviceHash = req.request.headers.get("X-Device-Hash");
     if (deviceHash) {
-      e2eeParticipant = await E2EEParticipantRepository.getByDeviceId(
-        [authUser.id, deviceHash],
+      e2eeParticipant = await E2EEParticipantRepository.findByUserIdAndDeviceId(
+        authUser.id,
+        deviceHash,
       );
     }
 
     const access_token = await createJWT<AccessTokenPayload>({
-      sub: authUser.id,
+      sub: authUser.id.toString(),
       e2eeParticipantId: e2eeParticipant?.id ?? null,
     });
 
     return { access_token };
   }
-
-  static async handleE2EEParticipantRegistration() {}
 }

@@ -10,10 +10,10 @@ export default function e2eeParticipantIdParamMatchesAuthE2EEParticipant(
   req: MiddlewareRequest,
   next: MiddlewareNextFn,
 ) {
-  const params = req.params as { e2eeParticipantId: string };
+  const { e2eeParticipantId } = req.params as { e2eeParticipantId: string };
   const context = req.context as RequestE2EEParticipantContext;
 
-  if (params.e2eeParticipantId !== context.e2eeParticipant.id) {
+  if (parseInt(e2eeParticipantId) !== context.e2eeParticipant.id) {
     next(
       new AppException({
         status: HttpReponseStatus.FORBIDDEN,
