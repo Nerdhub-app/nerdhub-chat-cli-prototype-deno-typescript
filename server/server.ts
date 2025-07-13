@@ -11,6 +11,7 @@ import RealTimeController from "./controller/real-time.controller.ts";
 
 // Middlewares
 import appExceptionHandler from "./middlewares/app-exception-handler.middleware.ts";
+import mysqlErrorHandler from "./middlewares/mysql-error-handler.middleware.ts";
 import requireBearerToken from "./middlewares/require-bearer-token.middleware.ts";
 import authUserMustExist from "./middlewares/auth-user-must-exist.middleware.ts";
 import userIdRequestParamMatchesAuthUser from "./middlewares/user-id-param-matches.middleware.ts";
@@ -101,6 +102,9 @@ router.post(
 
 // Real-Time communications through websockets
 router.use("/rt", RealTimeController.handleRealTimeHandshake);
+
+// MySQL error handler
+router.use(mysqlErrorHandler);
 
 // App exception handler
 router.use(appExceptionHandler);
