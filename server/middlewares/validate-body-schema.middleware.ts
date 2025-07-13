@@ -8,7 +8,7 @@ import {
 import AppException from "../helpers/app-exception.helper.ts";
 
 export default function validateRequestBodySchema(
-  schema: z.ZodObject,
+  schema: z.ZodObject | z.ZodArray,
 ): RequestNormalMiddleware {
   return (req: MiddlewareRequest, next: MiddlewareNextFn) => {
     try {
