@@ -38,35 +38,41 @@ export default class E2EEParticipantRepository {
 
     await conn.beginTransaction();
 
-    let sql = `
-    INSERT INTO ${tableName} (device_id, pub_identity_key, pub_signed_prekey, signed_prekey_signature, user_id)
-    VALUES (?, ?, ?, ?, ?)
-    `;
-    const [result] = await conn.execute(sql, [
-      deviceId,
-      dto.pubIdentityKey,
-      dto.pubSignedPreKey,
-      dto.signedPreKeySignature,
-      userId,
-    ]);
+    try {
+      let sql = `
+      INSERT INTO ${tableName} (device_id, pub_identity_key, pub_signed_prekey, signed_prekey_signature, user_id)
+      VALUES (?, ?, ?, ?, ?)
+      `;
+      const [result] = await conn.execute(sql, [
+        deviceId,
+        dto.pubIdentityKey,
+        dto.pubSignedPreKey,
+        dto.signedPreKeySignature,
+        userId,
+      ]);
 
-    sql = `
-    SELECT COUNT(id) as count FROM ${tableName} WHERE user_id = ?
-    `;
-    const [rows] = await conn.execute(sql, [userId]);
-    const countRes = rows as { count: number }[];
+      sql = `
+      SELECT COUNT(id) as count FROM ${tableName} WHERE user_id = ?
+      `;
+      const [rows] = await conn.execute(sql, [userId]);
+      const countRes = rows as { count: number }[];
 
-    const hasE2EEParticipant = countRes[0]?.count > 0;
-    sql = `
-    UPDATE ${usersTableName} SET has_e2ee_participant = ? WHERE id = ?
-    `;
-    await conn.execute(sql, [hasE2EEParticipant, userId]);
+      const hasE2EEParticipant = countRes[0]?.count > 0;
+      sql = `
+      UPDATE ${usersTableName} SET has_e2ee_participant = ? WHERE id = ?
+      `;
+      await conn.execute(sql, [hasE2EEParticipant, userId]);
 
-    await conn.commit();
+      await conn.commit();
 
-    conn.release();
+      conn.release();
 
-    return result as ResultSetHeader;
+      return result as ResultSetHeader;
+    } catch (error) {
+      await conn.commit();
+      conn.release();
+      throw error;
+    }
   }
 
   static async updatePreKeyBundleById(
