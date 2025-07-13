@@ -18,7 +18,17 @@ import userIdRequestParamMatchesAuthUser from "./middlewares/user-id-param-match
 import requireDeviceHash from "./middlewares/require-device-hash.middleware.ts";
 import e2eeParticipantMustExist from "./middlewares/e2ee-participant-must-exist.middleware.ts";
 import e2eeParticipantIdParamMatchesAuthE2EEParticipant from "./middlewares/e2ee-participant-id-param-matches.middleware.ts";
-import E2EEParticipantOnetimePreKeysController from "./controller/e2ee-participant-onetime-prekeys.controller.ts";
+import validateRequestBodySchema from "./middlewares/validate-body-schema.middleware.ts";
+
+// Request payload schemas
+import {
+  userLoginPayloadSchema,
+  userRegistrationPayloadSchema,
+} from "./controller/validator/auth.schema.ts";
+import {
+  createE2EEParticipantPayloadSchema,
+  updateE2EEParticipantPreKeyBundlePayloadSchema,
+} from "./controller/validator/e2ee-participant.schema.ts";
 
 // #region MySQL connection
 
@@ -55,8 +65,16 @@ const args = parseArgs(Deno.args, {
 const router = createRouter();
 
 // Auth
-router.post("/api/auth/register", AuthController.handleRegistration);
-router.post("/api/auth/login", AuthController.handleLogin);
+router.post(
+  "/api/auth/register",
+  validateRequestBodySchema(userRegistrationPayloadSchema),
+  AuthController.handleRegistration,
+);
+router.post(
+  "/api/auth/login",
+  validateRequestBodySchema(userLoginPayloadSchema),
+  AuthController.handleLogin,
+);
 router.get(
   "/api/auth/me",
   requireBearerToken,
@@ -77,6 +95,7 @@ router.post(
   authUserMustExist,
   userIdRequestParamMatchesAuthUser,
   requireDeviceHash,
+  validateRequestBodySchema(createE2EEParticipantPayloadSchema),
   E2EEParticipantController.handleCreateE2EEParticipant,
 );
 router.patch(
@@ -86,6 +105,7 @@ router.patch(
   userIdRequestParamMatchesAuthUser,
   e2eeParticipantMustExist,
   e2eeParticipantIdParamMatchesAuthE2EEParticipant,
+  validateRequestBodySchema(updateE2EEParticipantPreKeyBundlePayloadSchema),
   E2EEParticipantController.handleUpdateE2EEParticipantPreKeyBundle,
 );
 

@@ -7,6 +7,10 @@ import type {
   userLoginPayloadSchema,
   userRegistrationPayloadSchema,
 } from "./validator/auth.schema.ts";
+import type {
+  createE2EEParticipantPayloadSchema,
+  updateE2EEParticipantPreKeyBundlePayloadSchema,
+} from "./validator/e2ee-participant.schema.ts";
 
 // #region Auth
 
@@ -29,15 +33,13 @@ export type UserLoginResponsePayload = UserRegistrationResponsePayload & {
 
 // #region E2EE participant
 
-export type CreateE2EEParticipantRequestPayload = Record<
-  "pubIdentityKey" | "pubSignedPreKey" | "signedPreKeySignature",
-  string
+export type CreateE2EEParticipantRequestPayload = ReturnType<
+  typeof createE2EEParticipantPayloadSchema.parse
 >;
 export type CreateE2EEParticipantResponsePayload = E2EEParticipant;
 
-export type UpdateE2EEParticipantPreKeyBundleRequestPayload = Record<
-  "pubIdentityKey" | "pubSignedPreKey" | "signedPreKeySignature",
-  string
+export type UpdateE2EEParticipantPreKeyBundleRequestPayload = ReturnType<
+  typeof updateE2EEParticipantPreKeyBundlePayloadSchema.parse
 >;
 export type UpdateE2EEParticipantPreKeyBundleResponsePayload = E2EEParticipant;
 

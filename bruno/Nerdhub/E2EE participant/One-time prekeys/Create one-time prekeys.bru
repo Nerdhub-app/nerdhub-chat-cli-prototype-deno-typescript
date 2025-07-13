@@ -5,9 +5,13 @@ meta {
 }
 
 post {
-  url: {{API_BASE_URL}}/users/{{AUTH_USER_ID}}/e2ee_participants/{{E2EE_PARTICIPANT_ID}}/onetime_prekeys
+  url: {{API_BASE_URL}}/users/{{AUTH_USER_ID}}/e2ee_participants/{{E2EE_PARTICIPANT_ID}}/onetime_prekeys?flush=true
   body: json
   auth: inherit
+}
+
+params:query {
+  flush: true
 }
 
 body:json {
