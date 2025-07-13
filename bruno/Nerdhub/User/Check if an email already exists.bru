@@ -1,0 +1,15 @@
+meta {
+  name: Check if an email already exists
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{API_BASE_URL}}/users/email/exists?email=johndoe@test.com
+  body: none
+  auth: inherit
+}
+
+params:query {
+  email: johndoe@test.com
+}
