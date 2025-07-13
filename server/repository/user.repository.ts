@@ -29,6 +29,14 @@ export default class UserRepository {
     return (rows as { exists: number }[])[0].exists === 1;
   }
 
+  static async emailExists(email: string): Promise<boolean> {
+    const sql = `
+    SELECT EXISTS(SELECT 1 FROM ${tableName} WHERE email = ?) as 'exists'
+    `;
+    const [rows] = await getConnectionsPool().execute(sql, [email]);
+    return (rows as { exists: number }[])[0].exists === 1;
+  }
+
   static async create(payload: CreateUserDTO): Promise<ResultSetHeader> {
     const sql = `
     INSERT INTO ${tableName} (firstname, lastname, username, email, password) VALUES (?, ?, ?, ?, ?)
