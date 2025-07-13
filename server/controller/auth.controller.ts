@@ -19,6 +19,8 @@ import {
 } from "../router.ts";
 import AppException from "../helpers/app-exception.helper.ts";
 import type {
+  GetAccessTokenResponsePayload,
+  GetAuthUserResponsePayload,
   UserLoginRequestPayload,
   UserLoginResponsePayload,
   UserRegistrationRequestPayload,
@@ -118,7 +120,7 @@ export default class AuthController {
       ? await E2EEParticipantRepository.findById(e2eeParticipantId)
       : null;
 
-    const resBody: UserLoginResponsePayload = {
+    const resBody: GetAuthUserResponsePayload = {
       user: {
         id: authUser.id,
         firstname: authUser.firstname,
@@ -155,6 +157,9 @@ export default class AuthController {
       e2eeParticipantId: e2eeParticipant?.id ?? null,
     });
 
-    return { access_token };
+    const resBody: GetAccessTokenResponsePayload = {
+      access_token,
+    };
+    return resBody;
   }
 }

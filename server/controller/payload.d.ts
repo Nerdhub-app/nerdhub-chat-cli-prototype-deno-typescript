@@ -30,6 +30,12 @@ export type UserLoginResponsePayload = UserRegistrationResponsePayload & {
   e2eeParticipant: E2EEParticipant | null;
 };
 
+export type GetAuthUserResponsePayload = UserLoginResponsePayload;
+
+export type GetAccessTokenResponsePayload = {
+  access_token: string;
+};
+
 // #endregion
 
 // #region E2EE participant
