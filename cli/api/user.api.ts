@@ -13,7 +13,7 @@ export default class UserAPI {
   }
 
   static emailExists(email: string) {
-    const endpoint = `${USERS_ENDPOINT}/email/${email}/exists`;
+    const endpoint = `${USERS_ENDPOINT}/email/exists?email=${email}`;
     return ApiFetch.get<CheckEmailExistsResponsePayload>(endpoint);
   }
 }
