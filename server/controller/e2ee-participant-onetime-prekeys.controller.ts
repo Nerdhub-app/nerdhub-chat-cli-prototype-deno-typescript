@@ -12,7 +12,7 @@ import type {
 } from "@scope/server/payload";
 
 type CreateManyOnetimePreKeysRequestQuery = {
-  append?: string;
+  flush?: string;
 };
 
 export default class E2EEParticipantOnetimePreKeysController {
@@ -27,7 +27,7 @@ export default class E2EEParticipantOnetimePreKeysController {
     await E2EEParticipantOnetimePreKeysRepository.createManyByParticipantId(
       e2eeParticipant.id,
       payload,
-      !!query.append,
+      !!query.flush,
     );
 
     const resBody: CreateManyOnetimePreKeysResponsePayload =
