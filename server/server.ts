@@ -29,6 +29,7 @@ import {
   createE2EEParticipantPayloadSchema,
   updateE2EEParticipantPreKeyBundlePayloadSchema,
 } from "./controller/validator/e2ee-participant.schema.ts";
+import { createManyOnetimePreKeysPayloadSchema } from "./controller/validator/e2ee-participant-onetime-prekeys.schema.ts";
 
 // #region MySQL connection
 
@@ -117,6 +118,7 @@ router.post(
   userIdRequestParamMatchesAuthUser,
   e2eeParticipantMustExist,
   e2eeParticipantIdParamMatchesAuthE2EEParticipant,
+  validateRequestBodySchema(createManyOnetimePreKeysPayloadSchema),
   E2EEParticipantOnetimePreKeysController.handleCreateManyOnetimePreKeys,
 );
 

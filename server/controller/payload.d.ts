@@ -11,6 +11,7 @@ import type {
   createE2EEParticipantPayloadSchema,
   updateE2EEParticipantPreKeyBundlePayloadSchema,
 } from "./validator/e2ee-participant.schema.ts";
+import type { createManyOnetimePreKeysPayloadSchema } from "./validator/e2ee-participant-onetime-prekeys.schema.ts";
 
 // #region Auth
 
@@ -47,10 +48,9 @@ export type UpdateE2EEParticipantPreKeyBundleResponsePayload = E2EEParticipant;
 
 // #region E2EE participant one-time prekeys
 
-export type CreateManyOnetimePreKeysRequestPayload = {
-  id: string;
-  pubKey: string;
-}[];
+export type CreateManyOnetimePreKeysRequestPayload = ReturnType<
+  typeof createManyOnetimePreKeysPayloadSchema.parse
+>;
 export type CreateManyOnetimePreKeysResponsePayload = OnetimePreKey[];
 
 // #endregion
