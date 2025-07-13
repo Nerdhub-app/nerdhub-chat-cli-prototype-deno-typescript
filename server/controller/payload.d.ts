@@ -38,6 +38,14 @@ export type GetAccessTokenResponsePayload = {
 
 // #endregion
 
+// #region User
+
+export type CheckUsernameExistsResponsePayload = {
+  usernameExists: boolean;
+};
+
+// #endregion
+
 // #region E2EE participant
 
 export type CreateE2EEParticipantRequestPayload = ReturnType<

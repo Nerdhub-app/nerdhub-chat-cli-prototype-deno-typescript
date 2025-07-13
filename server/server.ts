@@ -30,6 +30,7 @@ import {
   updateE2EEParticipantPreKeyBundlePayloadSchema,
 } from "./controller/validator/e2ee-participant.schema.ts";
 import { createManyOnetimePreKeysPayloadSchema } from "./controller/validator/e2ee-participant-onetime-prekeys.schema.ts";
+import UserController from "./controller/user.controller.ts";
 
 // #region MySQL connection
 
@@ -87,6 +88,12 @@ router.get(
   requireBearerToken,
   authUserMustExist,
   AuthController.handleGetAccessToken,
+);
+
+// Users
+router.get(
+  "/api/users/username/:username/exists",
+  UserController.handleCheckUsernameExists,
 );
 
 // E2EE participants
