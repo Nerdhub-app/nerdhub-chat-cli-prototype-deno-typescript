@@ -44,6 +44,10 @@ export type CheckUsernameExistsResponsePayload = {
   usernameExists: boolean;
 };
 
+export type CheckEmailExistsResponsePayload = {
+  emailExists: boolean;
+};
+
 // #endregion
 
 // #region E2EE participant

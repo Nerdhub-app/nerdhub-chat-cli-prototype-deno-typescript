@@ -95,6 +95,10 @@ router.get(
   "/api/users/username/:username/exists",
   UserController.handleCheckUsernameExists,
 );
+router.get(
+  "/api/users/email/:email/exists",
+  UserController.handleCheckEmailExists,
+);
 
 // E2EE participants
 router.post(
