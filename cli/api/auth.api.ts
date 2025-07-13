@@ -1,30 +1,34 @@
-import type { UserLoginDTO, UserRegistrationDTO } from "@scope/server/types";
+import type {
+  UserLoginRequestPayload,
+  UserLoginResponsePayload,
+  UserRegistrationRequestPayload,
+  UserRegistrationResponsePayload,
+} from "@scope/server/payload";
 import { cliContext } from "../context.ts";
 import ApiFetch from "../helpers/api-fetch.helper.ts";
-import type {
-  UserLoginResponseDTO,
-  UserRegistrationResponseDTO,
-} from "../cli.d.ts";
 
 export const AUTH_ENDPOINT = "/auth";
 
 export default class AuthAPI {
-  static register(dto: UserRegistrationDTO) {
+  static register(payload: UserRegistrationRequestPayload) {
     const endpoint = AUTH_ENDPOINT + "/register";
-    return ApiFetch.post<UserRegistrationDTO, UserRegistrationResponseDTO>(
+    return ApiFetch.post<
+      UserRegistrationRequestPayload,
+      UserRegistrationResponsePayload
+    >(
       endpoint,
-      dto,
+      payload,
       {
         deviceHash: cliContext.deviceHash,
       },
     );
   }
 
-  static login(credentials: UserLoginDTO) {
+  static login(payload: UserLoginRequestPayload) {
     const endpoint = AUTH_ENDPOINT + "/login";
-    return ApiFetch.post<UserLoginDTO, UserLoginResponseDTO>(
+    return ApiFetch.post<UserLoginRequestPayload, UserLoginResponsePayload>(
       endpoint,
-      credentials,
+      payload,
       {
         deviceHash: cliContext.deviceHash,
       },
@@ -38,7 +42,7 @@ export default class AuthAPI {
       );
     }
     const endpoint = AUTH_ENDPOINT + "/me";
-    return ApiFetch.get<UserLoginResponseDTO>(endpoint, {
+    return ApiFetch.get<UserLoginResponsePayload>(endpoint, {
       bearerToken: cliContext.jwt,
     });
   }

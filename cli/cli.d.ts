@@ -1,21 +1,14 @@
 import type { Buffer } from "node:buffer";
 import type {
-  E2EEParticipantWithoutOnetimePreKeys,
-  OnetimePreKey,
+  E2EEParticipant as ServerE2EEParticipant,
   UserWithoutPassword,
-} from "@scope/server/types";
-
-export type {
-  UserLoginResponseDTO,
-  UserRegistrationResponseDTO,
 } from "@scope/server/types";
 
 export type Nullable<T> = T | null;
 
 export type User = UserWithoutPassword;
 
-export type E2EEParticipant = E2EEParticipantWithoutOnetimePreKeys;
-export type ServerE2EEParticipantOnetimePrekey = OnetimePreKey;
+export type E2EEParticipant = ServerE2EEParticipant;
 
 export type E2EEParticipantPrekeyBundle = {
   user_id: string;

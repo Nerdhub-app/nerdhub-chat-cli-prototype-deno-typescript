@@ -1,6 +1,11 @@
-import type { E2EEParticipant } from "../cli.d.ts";
 import { cliContext } from "../context.ts";
 import ApiFetch from "../helpers/api-fetch.helper.ts";
+import type {
+  CreateE2EEParticipantRequestPayload,
+  CreateE2EEParticipantResponsePayload,
+  UpdateE2EEParticipantPreKeyBundleRequestPayload,
+  UpdateE2EEParticipantPreKeyBundleResponsePayload,
+} from "@scope/server/payload";
 
 export const E2EE_PARTICIPANTS_ENDPOINT = "/e2ee_participants";
 
@@ -8,23 +13,18 @@ export function getUserE2EEParticipantsEndpoint(userId: string) {
   return "/users/" + userId + E2EE_PARTICIPANTS_ENDPOINT;
 }
 
-export type CreateE2EEParticipantPayload = Record<
-  "pubIdentityKey" | "pubSignedPreKey" | "signedPreKeySignature",
-  string
->;
-
-export type UpdateE2EEParticipantPreKeyBundlePayload =
-  CreateE2EEParticipantPayload;
-
 export default class E2EEParticipantAPI {
-  static create(userId: string, payload: CreateE2EEParticipantPayload) {
+  static create(userId: string, payload: CreateE2EEParticipantRequestPayload) {
     if (!cliContext.jwt) {
       throw new Error(
         "Cannot create an E2EE participant without the context's JWT",
       );
     }
     const endpoint = getUserE2EEParticipantsEndpoint(userId);
-    return ApiFetch.post<CreateE2EEParticipantPayload, E2EEParticipant>(
+    return ApiFetch.post<
+      CreateE2EEParticipantRequestPayload,
+      CreateE2EEParticipantResponsePayload
+    >(
       endpoint,
       payload,
       {
@@ -37,7 +37,7 @@ export default class E2EEParticipantAPI {
   static updatePreKeyBundle(
     userId: string,
     participantId: string,
-    payload: UpdateE2EEParticipantPreKeyBundlePayload,
+    payload: UpdateE2EEParticipantPreKeyBundleRequestPayload,
   ) {
     if (!cliContext.jwt) {
       throw new Error(
@@ -47,8 +47,8 @@ export default class E2EEParticipantAPI {
     const endpoint = getUserE2EEParticipantsEndpoint(userId) + "/" +
       participantId + "/prekey_bundle";
     return ApiFetch.patch<
-      UpdateE2EEParticipantPreKeyBundlePayload,
-      E2EEParticipant
+      UpdateE2EEParticipantPreKeyBundleRequestPayload,
+      UpdateE2EEParticipantPreKeyBundleResponsePayload
     >(
       endpoint,
       payload,

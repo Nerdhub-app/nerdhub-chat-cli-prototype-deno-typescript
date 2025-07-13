@@ -1,7 +1,10 @@
 import { cliContext } from "../context.ts";
 import ApiFetch from "../helpers/api-fetch.helper.ts";
-import type { ServerE2EEParticipantOnetimePrekey } from "../cli.d.ts";
 import { getUserE2EEParticipantsEndpoint } from "./e2ee-participant.api.ts";
+import type {
+  CreateManyOnetimePreKeysRequestPayload,
+  CreateManyOnetimePreKeysResponsePayload,
+} from "@scope/server/payload";
 
 export const ONETIME_PREKEYS_ENDPOINT = "/onetime_prekeys";
 
@@ -13,16 +16,11 @@ export function getE2EEParticipantOnetimePrekeysEndpoint(
     ONETIME_PREKEYS_ENDPOINT;
 }
 
-export type CreateManyOnetimePreKeysPayload = {
-  id: string;
-  pubKey: string;
-}[];
-
 export default class E2EEParticipantOnetimePreKeyAPI {
   static createMany(
     userId: string,
     e2eeParticipantId: string,
-    payload: CreateManyOnetimePreKeysPayload,
+    payload: CreateManyOnetimePreKeysRequestPayload,
     append = false,
   ) {
     if (!cliContext.jwt) {
@@ -36,8 +34,8 @@ export default class E2EEParticipantOnetimePreKeyAPI {
     );
     if (append) endpoint += "?append=true";
     return ApiFetch.post<
-      CreateManyOnetimePreKeysPayload,
-      ServerE2EEParticipantOnetimePrekey[]
+      CreateManyOnetimePreKeysRequestPayload,
+      CreateManyOnetimePreKeysResponsePayload
     >(endpoint, payload, {
       bearerToken: cliContext.jwt,
     });
