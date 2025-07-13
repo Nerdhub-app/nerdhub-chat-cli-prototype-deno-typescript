@@ -96,7 +96,7 @@ router.get(
   UserController.handleCheckUsernameExists,
 );
 router.get(
-  "/api/users/email/:email/exists",
+  "/api/users/email/exists",
   UserController.handleCheckEmailExists,
 );
 

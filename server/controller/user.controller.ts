@@ -1,5 +1,10 @@
+import AppException from "../helpers/app-exception.helper.ts";
 import UserRepository from "../repository/user.repository.ts";
-import type { MiddlewareNextFn, MiddlewareRequest } from "../router.ts";
+import {
+  HttpReponseStatus,
+  type MiddlewareNextFn,
+  type MiddlewareRequest,
+} from "../router.ts";
 import type {
   CheckEmailExistsResponsePayload,
   CheckUsernameExistsResponsePayload,
@@ -9,8 +14,8 @@ type CheckUsernameExistsRequestParams = {
   username: string;
 };
 
-type CheckEmailExistsRequestParams = {
-  email: string;
+type CheckEmailExistsQueryParams = {
+  email?: string;
 };
 
 export default class UserController {
@@ -26,10 +31,22 @@ export default class UserController {
 
   static async handleCheckEmailExists(
     req: MiddlewareRequest,
-    _next: MiddlewareNextFn,
+    next: MiddlewareNextFn,
   ) {
-    const { email } = req.params as CheckEmailExistsRequestParams;
-    const emailExists = await UserRepository.usernameExists(email);
+    const { email } = req.query as CheckEmailExistsQueryParams;
+
+    if (!email) {
+      next(
+        new AppException({
+          status: HttpReponseStatus.UNPROCESSABLE_ENTITY,
+          message: "The `email` query parameter is required",
+        }),
+      );
+      return;
+    }
+
+    const emailExists = await UserRepository.emailExists(email);
+
     const resBody: CheckEmailExistsResponsePayload = { emailExists };
     return resBody;
   }
