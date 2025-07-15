@@ -6,7 +6,7 @@ import { navigate } from "../router/router.ts";
 
 export default async function indexUI() {
   if (cliContext.isAuthenticated) {
-    const fullName = `${cliContext.user.firstName} ${cliContext.user.lastName}`;
+    const fullName = `${cliContext.user.firstname} ${cliContext.user.lastname}`;
     console.log(`Welcome back ${colors.blue(fullName)}!`);
     console.log();
   }
