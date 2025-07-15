@@ -8,7 +8,9 @@ export const USERS_ENDPOINT = "/users";
 
 export default class UserAPI {
   static usernameExists(username: string) {
-    const endpoint = `${USERS_ENDPOINT}/username/${username}/exists`;
+    const encodedUsername = encodeURIComponent(username);
+    console.log("encodedUsername", encodedUsername);
+    const endpoint = `${USERS_ENDPOINT}/username/${encodedUsername}/exists`;
     return ApiFetch.get<CheckUsernameExistsResponsePayload>(endpoint);
   }
 

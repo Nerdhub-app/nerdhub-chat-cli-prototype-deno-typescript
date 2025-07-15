@@ -9,12 +9,12 @@ import type {
 
 export const E2EE_PARTICIPANTS_ENDPOINT = "/e2ee_participants";
 
-export function getUserE2EEParticipantsEndpoint(userId: string) {
+export function getUserE2EEParticipantsEndpoint(userId: number) {
   return "/users/" + userId + E2EE_PARTICIPANTS_ENDPOINT;
 }
 
 export default class E2EEParticipantAPI {
-  static create(userId: string, payload: CreateE2EEParticipantRequestPayload) {
+  static create(userId: number, payload: CreateE2EEParticipantRequestPayload) {
     if (!cliContext.jwt) {
       throw new Error(
         "Cannot create an E2EE participant without the context's JWT",
@@ -35,8 +35,8 @@ export default class E2EEParticipantAPI {
   }
 
   static updatePreKeyBundle(
-    userId: string,
-    participantId: string,
+    userId: number,
+    participantId: number,
     payload: UpdateE2EEParticipantPreKeyBundleRequestPayload,
   ) {
     if (!cliContext.jwt) {

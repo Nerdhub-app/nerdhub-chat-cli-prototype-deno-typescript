@@ -9,8 +9,8 @@ import type {
 export const ONETIME_PREKEYS_ENDPOINT = "/onetime_prekeys";
 
 export function getE2EEParticipantOnetimePrekeysEndpoint(
-  userId: string,
-  e2eeParticipantId: string,
+  userId: number,
+  e2eeParticipantId: number,
 ) {
   return getUserE2EEParticipantsEndpoint(userId) + "/" + e2eeParticipantId +
     ONETIME_PREKEYS_ENDPOINT;
@@ -18,10 +18,10 @@ export function getE2EEParticipantOnetimePrekeysEndpoint(
 
 export default class E2EEParticipantOnetimePreKeyAPI {
   static createMany(
-    userId: string,
-    e2eeParticipantId: string,
+    userId: number,
+    e2eeParticipantId: number,
     payload: CreateManyOnetimePreKeysRequestPayload,
-    append = false,
+    options?: CreateManyOnetimePreKeysOptions,
   ) {
     if (!cliContext.jwt) {
       throw new Error(
@@ -32,7 +32,7 @@ export default class E2EEParticipantOnetimePreKeyAPI {
       userId,
       e2eeParticipantId,
     );
-    if (append) endpoint += "?append=true";
+    if (options?.flush) endpoint += "?flush=true";
     return ApiFetch.post<
       CreateManyOnetimePreKeysRequestPayload,
       CreateManyOnetimePreKeysResponsePayload
@@ -41,3 +41,7 @@ export default class E2EEParticipantOnetimePreKeyAPI {
     });
   }
 }
+
+export type CreateManyOnetimePreKeysOptions = {
+  flush?: boolean;
+};
