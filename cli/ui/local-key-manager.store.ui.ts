@@ -35,7 +35,7 @@ export default async function localKeyManagerStoreUI(
   let keyPath: string;
   if (cliContext.isAuthenticated && source === "user-based") {
     keyPath = generateLocalEncryptionKeyPemFilePathForUser(
-      cliContext.user.id,
+      cliContext.user.id.toString(),
     );
   } else {
     keyPath = await Input.prompt({

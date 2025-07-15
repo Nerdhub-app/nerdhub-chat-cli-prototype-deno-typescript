@@ -37,7 +37,7 @@ export default async function localKeyManagerRetrieveUI(
   while (!pemFileExists) {
     if (cliContext.isAuthenticated && mode === "user-based") {
       keyPath = generateLocalEncryptionKeyPemFilePathForUser(
-        cliContext.user.id,
+        cliContext.user.id.toString(),
       );
     } else {
       keyPath = await Input.prompt({
