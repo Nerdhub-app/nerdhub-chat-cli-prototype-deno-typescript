@@ -1,63 +1,48 @@
 import { Buffer } from "node:buffer";
 import { db } from "../database/db.connection.ts";
-import type { E2EEParticipantOnetimePrekey } from "../cli.d.ts";
+import type {
+  E2EEParticipantOnetimePrekey,
+  E2EEParticipantOnetimePrekeyRow,
+} from "../cli.d.ts";
+import type { StatementResultingChanges } from "node:sqlite";
+import type { DbTableName } from "../cli.d.ts";
 
-export type CreateOnetimePreKeyDTO = {
-  id: string;
-  pubKey: Buffer;
-  privKey: Buffer;
-  userId: string;
-  participantId?: string;
-};
-
-export type PublishUserOnetimePreKeysDTO = {
-  participantId: string;
-};
+const tableName: DbTableName = "e2ee_participant_onetime_prekeys";
 
 export default class E2EEParticipantOnetimePreKeyRepository {
-  static getLatestForUser(userId: string) {
+  static findLatestByUserId(
+    userId: number,
+  ): E2EEParticipantOnetimePrekey | null {
     const sql = `
     SELECT *
-    FROM e2ee_participant_onetime_prekeys
+    FROM ${tableName}
     WHERE user_id = ?
     ORDER BY created_at DESC
     LIMIT 1
     `;
     const query = db.prepare(sql);
-    let opk = query.get(userId) as
-      | E2EEParticipantOnetimePrekey
+    const row = query.get(userId) as
+      | E2EEParticipantOnetimePrekeyRow
       | null;
-    if (opk) {
-      opk = {
-        ...opk,
-        pub_key: Buffer.from(opk.pub_key),
-        priv_key: Buffer.from(opk.priv_key),
-      };
-    }
-    return opk;
+    return row ? toE2EEParticipantOnetimePreKey(row) : null;
   }
 
-  static getNonPublishedForUser(userId: string) {
+  static findManyNonPublishedByUserId(
+    userId: number,
+  ): E2EEParticipantOnetimePrekey[] {
     const sql = `
-    SELECT * FROM e2ee_participant_onetime_prekeys
+    SELECT * FROM ${tableName}
     WHERE user_id = ? AND is_published = 0
     `;
     const query = db.prepare(sql);
-    let onetimePreKeys = query.all(userId) as E2EEParticipantOnetimePrekey[];
-    if (onetimePreKeys) {
-      onetimePreKeys = onetimePreKeys.map((opk) => ({
-        ...opk,
-        pub_key: Buffer.from(opk.pub_key),
-        priv_key: Buffer.from(opk.priv_key),
-      }));
-    }
-    return onetimePreKeys;
+    const rows = query.all(userId) as E2EEParticipantOnetimePrekeyRow[];
+    return rows.map((row) => toE2EEParticipantOnetimePreKey(row));
   }
 
-  static countForUserId(userId: string) {
+  static countByUserId(userId: number): number {
     const sql = `
     SELECT COUNT(id) AS count
-    FROM e2ee_participant_onetime_prekeys
+    FROM ${tableName}
     WHERE user_id = ?
     `;
     const query = db.prepare(sql);
@@ -65,10 +50,10 @@ export default class E2EEParticipantOnetimePreKeyRepository {
     return result?.count ?? 0;
   }
 
-  static isEmptyForUserId(userId: string) {
+  static isEmptyByUserId(userId: number): boolean {
     const sql = `
     SELECT COUNT(id) AS count
-    FROM e2ee_participant_onetime_prekeys
+    FROM ${tableName}
     WHERE user_id = ?
     `;
     const query = db.prepare(sql);
@@ -76,14 +61,16 @@ export default class E2EEParticipantOnetimePreKeyRepository {
     return !result || result.count === 0;
   }
 
-  static createMany(onetimePreKeys: CreateOnetimePreKeyDTO[]) {
+  static createMany(
+    onetimePreKeys: CreateOnetimePreKeyDTO[],
+  ): StatementResultingChanges {
     const now = Date.now();
     const valuesPlaceholder = onetimePreKeys.map(() => {
       return "(?, ?, ?, ?, ?, ?, ?, ?)";
     })
       .join(", ");
     const sql = `
-    INSERT INTO e2ee_participant_onetime_prekeys (id, pub_key, priv_key, is_published, user_id, participant_id, created_at, updated_at)
+    INSERT INTO ${tableName} (id, pub_key, priv_key, is_published, user_id, participant_id, created_at, updated_at)
     VALUES ${valuesPlaceholder}
     `;
     const query = db.prepare(sql);
@@ -99,27 +86,15 @@ export default class E2EEParticipantOnetimePreKeyRepository {
         now,
       ],
     );
-    const result = query.run(...values);
-    return {
-      result,
-      onetimePreKeys: onetimePreKeys.map<E2EEParticipantOnetimePrekey>((
-        opk,
-      ) => ({
-        id: opk.id,
-        pub_key: opk.pubKey,
-        priv_key: opk.privKey,
-        is_published: false,
-        user_id: opk.userId,
-        participant_id: opk.participantId ?? null,
-        created_at: new Date(now),
-        updated_at: new Date(now),
-      })),
-    };
+    return query.run(...values);
   }
 
-  static publishForUserId(userId: string, dto: PublishUserOnetimePreKeysDTO) {
+  static publishByUserId(
+    userId: number,
+    dto: PublishUserOnetimePreKeysDTO,
+  ): StatementResultingChanges {
     const sql = `
-    UPDATE e2ee_participant_onetime_prekeys
+    UPDATE ${tableName}
     SET is_published = true, participant_id = ?, updated_at = ?
     WHERE user_id = ?
     `;
@@ -128,13 +103,38 @@ export default class E2EEParticipantOnetimePreKeyRepository {
     return res;
   }
 
-  static clearForUserId(userId: string) {
+  static deleteByUserId(userId: number): StatementResultingChanges {
     const sql = `
-    DELETE FROM e2ee_participant_onetime_prekeys
+    DELETE FROM ${tableName}
     WHERE user_id = ?
     `;
     const query = db.prepare(sql);
     const res = query.run(userId);
     return res;
   }
+}
+
+export type CreateOnetimePreKeyDTO = {
+  id: string;
+  pubKey: Buffer;
+  privKey: Buffer;
+  userId: number;
+  participantId?: number;
+};
+
+export type PublishUserOnetimePreKeysDTO = {
+  participantId: number;
+};
+
+function toE2EEParticipantOnetimePreKey(
+  row: E2EEParticipantOnetimePrekeyRow,
+): E2EEParticipantOnetimePrekey {
+  return {
+    ...row,
+    pub_key: Buffer.from(row.pub_key),
+    priv_key: Buffer.from(row.priv_key),
+    is_published: Boolean(row.is_published),
+    created_at: new Date(row.created_at),
+    updated_at: new Date(row.updated_at),
+  };
 }
