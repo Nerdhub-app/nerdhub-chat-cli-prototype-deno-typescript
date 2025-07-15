@@ -1,5 +1,5 @@
 import { Command } from "@cliffy/command";
-import { runMigrations } from "../database/migrations.ts";
+import { runMigrations } from "../database/db.migrations.ts";
 import { db } from "../database/db.connection.ts";
 
 export const DB_RESET_COMMAND = "db-reset";

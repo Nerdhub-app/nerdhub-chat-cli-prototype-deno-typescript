@@ -1,22 +1,25 @@
 import type { DatabaseSync } from "node:sqlite";
 import { colors } from "@cliffy/ansi/colors";
+import type { DbTableName } from "../cli.d.ts";
 
 type TableMigrationLifecycles = {
+  tableName: DbTableName;
   up(db: DatabaseSync): void;
   down(db: DatabaseSync): void;
 };
 
-const migrations: Record<string, TableMigrationLifecycles> = {
-  e2eeParticipantOnetimePreKeys: {
+const migrations: TableMigrationLifecycles[] = [
+  {
+    tableName: "e2ee_participant_onetime_prekeys",
     up(db) {
       let sql = `
-      CREATE TABLE IF NOT EXISTS e2ee_participant_onetime_prekeys (
+      CREATE TABLE IF NOT EXISTS ${this.tableName} (
         id TEXT NOT NULL PRIMARY KEY,
         pub_key BLOB NOT NULL,
         priv_key BLOB NOT NULL,
         is_published INT NOT NULL,
-        user_id TEXT NOT NULL,
-        participant_id TEXT,
+        user_id INT NOT NULL,
+        participant_id INT,
         created_at INT NOT NULL,
         updated_at INT NOT NULL
       )
@@ -34,22 +37,23 @@ const migrations: Record<string, TableMigrationLifecycles> = {
       db.exec(sql);
     },
     down(db) {
-      const sql = `DROP TABLE IF EXISTS e2ee_participant_onetime_prekeys`;
+      const sql = `DROP TABLE IF EXISTS ${this.tableName}`;
       db.exec(sql);
     },
   },
-  e2eeParticipantPublicKeys: {
+  {
+    tableName: "e2ee_participant_prekey_bundles",
     up(db) {
       const sql = `
-      CREATE TABLE IF NOT EXISTS e2ee_participants_prekey_bundles (
-        user_id TEXT NOT NULL PRIMARY KEY,
+      CREATE TABLE IF NOT EXISTS ${this.tableName} (
+        user_id INT NOT NULL PRIMARY KEY,
         pub_identity_key BLOB NOT NULL,
         priv_identity_key BLOB NOT NULL,
         pub_signed_prekey BLOB NOT NULL,
-        pub_signed_prekey_signature BLOB NOT NULL,
+        signed_prekey_signature BLOB NOT NULL,
         priv_signed_prekey BLOB NOT NULL,
         is_published INT NOT NULL,
-        participant_id TEXT,
+        participant_id INT,
         created_at INT NOT NULL,
         updated_at INT NOT NULL
       )
@@ -57,39 +61,35 @@ const migrations: Record<string, TableMigrationLifecycles> = {
       db.exec(sql);
     },
     down(db) {
-      const sql = `DROP TABLE IF EXISTS e2ee_participants_prekey_bundles`;
+      const sql = `DROP TABLE IF EXISTS ${this.tableName}`;
       db.exec(sql);
     },
   },
-};
+];
 
 export function runMigrationsUp(db: DatabaseSync) {
-  for (const table in migrations) {
-    const migration = migrations[table];
+  for (const migration of migrations) {
     migration.up(db);
-    console.log(colors.blue(`Created the "${table}" table.`));
+    console.log(colors.blue(`Created the "${migration.tableName}" table.`));
   }
 }
 
 export function runMigrationsDown(db: DatabaseSync) {
-  for (const table in migrations) {
-    const migration = migrations[table];
+  for (const migration of migrations) {
     migration.down(db);
-    console.log(colors.red(`Deleted the "${table}" table.`));
+    console.log(colors.red(`Deleted the "${migration.tableName}" table.`));
   }
 }
 
 export function runMigrations(db: DatabaseSync, flush = false) {
   if (flush) {
-    for (const table in migrations) {
-      const migration = migrations[table];
+    for (const migration of migrations) {
       migration.down(db);
-      console.log(colors.red(`Deleted the "${table}" table.`));
+      console.log(colors.red(`Deleted the "${migration.tableName}" table.`));
     }
   }
-  for (const table in migrations) {
-    const migration = migrations[table];
+  for (const migration of migrations) {
     migration.up(db);
-    console.log(colors.blue(`Created the "${table}" table.`));
+    console.log(colors.blue(`Created the "${migration.tableName}" table.`));
   }
 }
