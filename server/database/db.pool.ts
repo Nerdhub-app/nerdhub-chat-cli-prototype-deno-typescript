@@ -2,9 +2,9 @@ import { parseArgs } from "@std/cli";
 import mysql from "mysql2/promise";
 
 const args = parseArgs(Deno.args, {
-  string: ["url", "host", "port", "user", "password", "database"],
+  string: ["uri", "host", "port", "user", "password", "database"],
   alias: {
-    url: "mysql-url",
+    uri: "mysql-uri",
     host: "mysql-host",
     port: "mysql-port",
     user: "mysql-user",
@@ -12,7 +12,7 @@ const args = parseArgs(Deno.args, {
     database: "mysql-db",
   },
   default: {
-    url: Deno.env.get("MYSQL_URL"),
+    uri: Deno.env.get("MYSQL_URI"),
     host: Deno.env.get("MYSQL_HOST") || "localhost",
     port: Deno.env.get("MYSQL_PORT") || "3306",
     user: Deno.env.get("MYSQL_USER") || "root",
@@ -22,7 +22,7 @@ const args = parseArgs(Deno.args, {
 });
 
 function createConnectionsPool() {
-  return args.url ? mysql.createPool({ uri: args.url }) : mysql.createPool({
+  return args.uri ? mysql.createPool({ uri: args.uri }) : mysql.createPool({
     host: args.host,
     port: Number(args.port),
     user: args.user,
