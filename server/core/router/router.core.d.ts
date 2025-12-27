@@ -1,4 +1,4 @@
-import type { HttpReponseStatus } from "../../router.ts";
+import type { HttpResponseStatus } from "./router.core.const.ts";
 
 /**
  * Supported HTTP methods for the router.
@@ -14,7 +14,7 @@ export type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
  * @template TBody - Type of the request body.
  */
 export interface RouterRequest<
-  TParams extends Record<string, unknown> = Record<string, string>,
+  TParams extends Record<string, unknown> = Record<string, unknown>,
   TQuery extends Record<string, string> = Record<string, string>,
   TContext = Record<string, unknown>,
   TBody = unknown,
@@ -73,7 +73,7 @@ export interface RouterResponse<TBody = unknown> {
    * Sets the HTTP status code for the response.
    * @param status - The HTTP status code.
    */
-  setStatus(status: HttpReponseStatus): RouterResponse<TBody>;
+  setStatus(status: HttpResponseStatus): RouterResponse<TBody>;
 
   /**
    * Sets the Content-Type header for the response.

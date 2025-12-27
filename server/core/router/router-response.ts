@@ -1,13 +1,13 @@
-import type { HttpReponseStatus } from "../../router.ts";
+import type { HttpResponseStatus } from "./router.core.const.ts";
 import type { RouterResponse } from "./router.core.d.ts";
 
 export class ConcreteRouterResponse<TBody = unknown>
   implements RouterResponse<TBody> {
-  #status?: HttpReponseStatus;
+  #status?: HttpResponseStatus;
   #contentType?: string;
   #body: TBody | null = null;
 
-  setStatus(status: HttpReponseStatus): RouterResponse<TBody> {
+  setStatus(status: HttpResponseStatus): RouterResponse<TBody> {
     this.#status = status;
     return this;
   }

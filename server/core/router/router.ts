@@ -9,6 +9,7 @@ import type {
   RequestProcessingHandlersAndRouterEntryParams,
   RequestProcessingHandlersEntryParams,
   Router,
+  RouterRequest,
   RouterResponse,
 } from "./router.core.d.ts";
 import {
@@ -285,6 +286,9 @@ export default class ConcreteRouter implements Router {
      */
     const concreteRequest = request as ConcreteRouterRequest;
 
+    /**
+     * The request pathname to be matched against the router's entries' pathnames.
+     */
     const matchedRequestPathname =
       rootRouterRequestHandlerProps?.matchedRequestPathname ??
         normalizeRequestPathname(concreteRequest.reqPathname);
@@ -472,7 +476,7 @@ export default class ConcreteRouter implements Router {
       throw nextFnState.error;
     } else {
       // When the request is unmatched through the router's entries, throw an error.
-      throw new UnmatchedRequestThroughEntriesError();
+      throw new UnmatchedRequestThroughEntriesError(concreteRequest);
     }
   }
 }
@@ -481,8 +485,11 @@ export default class ConcreteRouter implements Router {
  * Thrown when a request is unmatched through the router's entries.
  */
 export class UnmatchedRequestThroughEntriesError extends Error {
-  constructor() {
+  request!: RouterRequest;
+
+  constructor(request: RouterRequest) {
     super("Unmatched request through entries");
+    this.request = request;
   }
 }
 
