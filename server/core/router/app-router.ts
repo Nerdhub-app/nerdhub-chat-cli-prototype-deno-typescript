@@ -1,4 +1,4 @@
-import { UNRETURNED_HTTP_RESPONSE_TIMEOUT } from "../../config/server.config.ts";
+import { UNRETURNED_HTTP_RESPONSE_TIMEOUT } from "../../configs/server.config.ts";
 import {
   BodyParseError,
   injectRouterRequestFactory,
