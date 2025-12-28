@@ -121,17 +121,25 @@ export type RequestHandlerReturnType<TBody = unknown> = Promise<
  * @template TRequestBody - Type of the request body.
  * @template TResponseBody - Type of the response body.
  */
-export type RequestProcessingHandler<
+export interface RequestProcessingHandler<
   TParams extends Record<string, unknown>,
   TQuery extends Record<string, string>,
   TContext = Record<string, unknown>,
   TRequestBody = unknown,
   TResponseBody = unknown,
-> = (
-  request: RouterRequest<TParams, TQuery, TContext, TRequestBody>,
-  response: RouterResponse<TResponseBody>,
-  next?: RequestHandlerNextFunction,
-) => RequestHandlerReturnType<TResponseBody>;
+> {
+  (
+    request: RouterRequest<TParams, TQuery, TContext, TRequestBody>,
+    response: RouterResponse<TResponseBody>,
+    next?: RequestHandlerNextFunction,
+  ): RequestHandlerReturnType<TResponseBody>;
+
+  /**
+   * Custom HTTP response status code.
+   * Set by a decorator and only used when the handler returns a non-request value.
+   */
+  httpResponseStatus?: HttpResponseStatus;
+}
 
 /**
  * A generic RequestProcessingHandler with default type arguments.
@@ -153,18 +161,26 @@ export type GenericRequestProcessingHandler = RequestProcessingHandler<
  * @template TRequestBody - Type of the request body.
  * @template TResponseBody - Type of the response body.
  */
-export type RequestErrorHandler<
+export interface RequestErrorHandler<
   TParams extends Record<string, unknown>,
   TQuery extends Record<string, string>,
   TContext = Record<string, unknown>,
   TRequestBody = unknown,
   TResponseBody = unknown,
-> = (
-  error: unknown,
-  request: RouterRequest<TParams, TQuery, TContext, TRequestBody>,
-  response: RouterResponse<TResponseBody>,
-  next: RequestHandlerNextFunction,
-) => RequestHandlerReturnType<TResponseBody>;
+> {
+  (
+    error: unknown,
+    request: RouterRequest<TParams, TQuery, TContext, TRequestBody>,
+    response: RouterResponse<TResponseBody>,
+    next: RequestHandlerNextFunction,
+  ): RequestHandlerReturnType<TResponseBody>;
+
+  /**
+   * Custom HTTP response status code.
+   * Set by a decorator and only used when the handler returns a non-request value.
+   */
+  httpResponseStatus?: HttpResponseStatus;
+}
 
 /**
  * A generic RequestErrorHandler with default type arguments.

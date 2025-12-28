@@ -1,6 +1,9 @@
 import { assertEquals } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
-import { bindRequestParameter } from "./router.core.decorators.ts";
+import {
+  bindRequestParameter,
+  setHttpResponseStatus,
+} from "./router.core.decorators.ts";
 import ConcreteRouterRequest from "./router-request.ts";
 
 describe("router.core.decorators", () => {
@@ -79,6 +82,26 @@ describe("router.core.decorators", () => {
       const result = await controller.handler(req);
       assertEquals(result, 456);
       assertEquals(req.params.userId, 456);
+    });
+  });
+
+  describe("setHttpResponseStatus", () => {
+    it("should set the httpResponseStatus property on the decorated method", () => {
+      class TestController {
+        handler() {}
+      }
+
+      const descriptor = Object.getOwnPropertyDescriptor(
+        TestController.prototype,
+        "handler",
+      )!;
+
+      const status = 201;
+      const decorator = setHttpResponseStatus(status);
+      decorator(TestController.prototype, "handler", descriptor);
+
+      // @ts-ignore: Accessing custom property
+      assertEquals(descriptor.value.httpResponseStatus, status);
     });
   });
 });

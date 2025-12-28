@@ -3,6 +3,7 @@ import type {
   GenericRequestProcessingHandler,
 } from "./index.ts";
 import ConcreteRouterRequest from "./router-request.ts";
+import type { HttpResponseStatus } from "./router.core.const.ts";
 
 /**
  * A tuple containing the new parameter name and resolved value.
@@ -69,3 +70,18 @@ export type BindedRequestParameters<
   TResolvedValue,
   TRequestParams = Record<string, unknown>,
 > = TRequestParams & { [key in TNewRequestParamName]: TResolvedValue };
+
+/**
+ * Sets the HTTP response status code for a request handler.
+ * @param status The HTTP response status code to set.
+ * @returns A decorator function that can be used to set the HTTP response status code.
+ */
+export function setHttpResponseStatus(status: HttpResponseStatus) {
+  return function (
+    _target: unknown,
+    _propertyKey: string,
+    descriptor: PropertyDescriptor,
+  ) {
+    descriptor.value.httpResponseStatus = status;
+  };
+}
