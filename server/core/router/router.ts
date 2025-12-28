@@ -1,4 +1,5 @@
 import type { ConcreteRouterRequest } from "./router-request.ts";
+import type { HttpResponseStatus } from "./router.core.const.ts";
 import type {
   GenericRequestErrorHandler,
   GenericRequestProcessingHandler,
@@ -141,6 +142,20 @@ type RequestHandlerNextFunctionState = {
   error: unknown | null;
 };
 
+/**
+ * The return type of the request channeling process.
+ */
+type RequestChannelingReturnType<TResponseBody> = {
+  /**
+   * The HTTP response status code.
+   */
+  requestHandlerHttpResponseStatus?: HttpResponseStatus;
+  /**
+   * The return value of the request handler.
+   */
+  requestHandlerReturnValue: RequestHandlerReturnType<TResponseBody>;
+};
+
 export default class ConcreteRouter implements Router {
   #requestHandlersEntries: RequestHandlersEntry[] = [];
   get requestHandlersEntries(): readonly RequestHandlersEntry[] {
@@ -280,14 +295,14 @@ export default class ConcreteRouter implements Router {
     request: GenericRouterRequest,
     response: RouterResponse<unknown>,
     rootRouterRequestHandlerProps?: RootRouterRequestHandlerProps,
-  ): RequestHandlerReturnType<unknown> {
+  ): Promise<RequestChannelingReturnType<unknown>> {
     /**
      * The request as an instance of {@link ConcreteRouterRequest}
      */
     const concreteRequest = request as ConcreteRouterRequest;
 
     /**
-     * The request pathname to be matched against the router's entries' pathnames.
+     * The part of the request pathname to be matched against the router's entries' pathnames.
      */
     const matchedRequestPathname =
       rootRouterRequestHandlerProps?.matchedRequestPathname ??
@@ -388,7 +403,12 @@ export default class ConcreteRouter implements Router {
           nextFnState.forward = false;
 
           try {
-            let requestHandlerReturn: RequestHandlerReturnType<unknown>;
+            let requestHandlerReturn:
+              | Promise<RequestHandlerReturnType<unknown>>
+              | RequestHandlerReturnType<unknown>;
+            let requestHandlerHttpResponseStatus:
+              | HttpResponseStatus
+              | undefined;
             // Channeling the request through the sub-router.
             if (requestHandler instanceof ConcreteRouter) {
               // The sub-router's matched request pathname should be the request pathname without the current entry without wildcard's matched request pathname.
@@ -409,20 +429,26 @@ export default class ConcreteRouter implements Router {
                 matchedRequestPathname: subRouterMatchedRequestPathname,
                 nextFn,
               };
-              requestHandlerReturn = requestHandler
+              const {
+                requestHandlerReturnValue: returnValue,
+                requestHandlerHttpResponseStatus: responseStatus,
+              } = await requestHandler
                 .channelRequestThroughRequestHandlers(
                   concreteRequest,
                   response,
                   routerRequestHandlerProps,
                 );
+              requestHandlerReturn = returnValue;
+              requestHandlerHttpResponseStatus = responseStatus;
             } // Invoking the request processing handler.
             else {
-              requestHandlerReturn =
-                (requestHandler as GenericRequestProcessingHandler)(
-                  concreteRequest,
-                  response,
-                  nextFn,
-                );
+              const handler = requestHandler as GenericRequestProcessingHandler;
+              requestHandlerReturn = handler(
+                concreteRequest,
+                response,
+                nextFn,
+              );
+              requestHandlerHttpResponseStatus = handler.httpResponseStatus;
             }
 
             const requestHandlerOutput = requestHandlerReturn instanceof Promise
@@ -430,7 +456,10 @@ export default class ConcreteRouter implements Router {
               : requestHandlerReturn;
 
             if (!nextFnState.forward) {
-              return requestHandlerOutput;
+              return {
+                requestHandlerReturnValue: requestHandlerOutput,
+                requestHandlerHttpResponseStatus,
+              };
             } else if (nextFnState.error) {
               // Breaking the loop when the next function was called with an error.
               break;
@@ -459,7 +488,11 @@ export default class ConcreteRouter implements Router {
             : requestHandlerReturn;
 
           if (!nextFnState.forward) {
-            return requestHandlerOutput;
+            return {
+              requestHandlerReturnValue: requestHandlerOutput,
+              requestHandlerHttpResponseStatus:
+                requestHandlersEntry.handler.httpResponseStatus,
+            };
           }
         } catch (error) {
           // When an error was thrown, attach it to the next function's state.
@@ -478,6 +511,11 @@ export default class ConcreteRouter implements Router {
       // When the request is unmatched through the router's entries, throw an error.
       throw new UnmatchedRequestThroughEntriesError(concreteRequest);
     }
+    // Empty response to satisfy the return type.
+    return {
+      requestHandlerReturnValue: undefined,
+      requestHandlerHttpResponseStatus: undefined,
+    };
   }
 }
 

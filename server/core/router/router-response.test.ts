@@ -1,7 +1,7 @@
 import { assert, assertEquals } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
 import { ConcreteRouterResponse } from "./router-response.ts";
-import { HttpReponseStatus } from "../../router.ts";
+import { HttpResponseStatus } from "./router.core.const.ts";
 
 describe("RouterResponse", () => {
   describe("toDenoResponse", () => {
@@ -29,11 +29,11 @@ describe("RouterResponse", () => {
 
     it("should create a response with custom status", () => {
       const response = new ConcreteRouterResponse()
-        .setStatus(HttpReponseStatus.NOT_FOUND)
+        .setStatus(HttpResponseStatus.NOT_FOUND)
         .text("Not Found");
       const denoResponse = response.toDenoResponse();
 
-      assertEquals(denoResponse.status, 404);
+      assertEquals(denoResponse.status, HttpResponseStatus.NOT_FOUND);
     });
 
     it("should create a response with custom content type", () => {
@@ -53,7 +53,10 @@ describe("RouterResponse", () => {
       const response = new ConcreteRouterResponse().json(circular);
       const denoResponse = response.toDenoResponse();
 
-      assertEquals(denoResponse.status, 500);
+      assertEquals(
+        denoResponse.status,
+        HttpResponseStatus.INTERNAL_SERVER_ERROR,
+      );
       assertEquals(
         denoResponse.headers.get("Content-Type"),
         "application/text",

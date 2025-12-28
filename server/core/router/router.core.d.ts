@@ -108,9 +108,11 @@ export type RequestHandlerNextFunction = (error?: unknown) => void;
 /**
  * Possible return types for a request handler.
  */
-export type RequestHandlerReturnType<TBody = unknown> = Promise<
-  void | TBody | RouterResponse<TBody> | Response
->;
+export type RequestHandlerReturnType<TBody = unknown> =
+  | void
+  | TBody
+  | RouterResponse<TBody>
+  | Response;
 
 /**
  * Handler function that processes a request and generates a response.

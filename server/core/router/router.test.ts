@@ -63,7 +63,9 @@ describe("ConcreteRouter", () => {
     const res = createMockResponse();
 
     await assertRejects(
-      () => router.channelRequestThroughRequestHandlers(req, res),
+      async () => {
+        await router.channelRequestThroughRequestHandlers(req, res);
+      },
       UnmatchedRequestThroughEntriesError,
     );
   });
@@ -255,10 +257,11 @@ describe("ConcreteRouter", () => {
 
       const req = createMockRequest("GET");
       const res = createMockResponse();
-      const result = await router.channelRequestThroughRequestHandlers(
-        req,
-        res,
-      );
+      const { requestHandlerReturnValue: result } = await router
+        .channelRequestThroughRequestHandlers(
+          req,
+          res,
+        );
 
       assertEquals(result, "ok");
       assertEquals(handlerSpy.calls.length, 1);
@@ -271,10 +274,11 @@ describe("ConcreteRouter", () => {
 
       const req = createMockRequest("GET", "http://localhost/test");
       const res = createMockResponse();
-      const result = await router.channelRequestThroughRequestHandlers(
-        req,
-        res,
-      );
+      const { requestHandlerReturnValue: result } = await router
+        .channelRequestThroughRequestHandlers(
+          req,
+          res,
+        );
 
       assertEquals(result, "ok");
       assertEquals(handlerSpy.calls.length, 1);
@@ -297,10 +301,11 @@ describe("ConcreteRouter", () => {
 
       const req = createMockRequest("GET");
       const res = createMockResponse();
-      const result = await router.channelRequestThroughRequestHandlers(
-        req,
-        res,
-      );
+      const { requestHandlerReturnValue: result } = await router
+        .channelRequestThroughRequestHandlers(
+          req,
+          res,
+        );
 
       assertEquals(result, "finished");
       assertEquals(handler1.calls.length, 1);
@@ -325,10 +330,11 @@ describe("ConcreteRouter", () => {
 
       const req = createMockRequest("GET");
       const res = createMockResponse();
-      const result = await router.channelRequestThroughRequestHandlers(
-        req,
-        res,
-      );
+      const { requestHandlerReturnValue: result } = await router
+        .channelRequestThroughRequestHandlers(
+          req,
+          res,
+        );
 
       assertEquals(result, "done");
       assertEquals(handler1.calls.length, 1);
@@ -365,10 +371,11 @@ describe("ConcreteRouter", () => {
 
       const req = createMockRequest("GET", "http://localhost/foo");
       const res = createMockResponse();
-      const result = await router.channelRequestThroughRequestHandlers(
-        req,
-        res,
-      );
+      const { requestHandlerReturnValue: result } = await router
+        .channelRequestThroughRequestHandlers(
+          req,
+          res,
+        );
 
       assertEquals(result, "matched");
       assertEquals(handler1.calls.length, 1);
@@ -417,10 +424,11 @@ describe("ConcreteRouter", () => {
 
       const req = createMockRequest("GET");
       const res = createMockResponse();
-      const result = await router.channelRequestThroughRequestHandlers(
-        req,
-        res,
-      );
+      const { requestHandlerReturnValue: result } = await router
+        .channelRequestThroughRequestHandlers(
+          req,
+          res,
+        );
 
       assertEquals(result, "error-handled");
       assertEquals(handler1.calls.length, 1);
@@ -441,10 +449,11 @@ describe("ConcreteRouter", () => {
 
         const req = createMockRequest(verb, "http://localhost/test");
         const res = createMockResponse();
-        const result = await router.channelRequestThroughRequestHandlers(
-          req,
-          res,
-        );
+        const { requestHandlerReturnValue: result } = await router
+          .channelRequestThroughRequestHandlers(
+            req,
+            res,
+          );
         assertEquals(result, verb);
         assertEquals(handlerSpy.calls.length, 1);
       }
@@ -465,10 +474,11 @@ describe("ConcreteRouter", () => {
 
       const req = createMockRequest("GET", "http://localhost/baz");
       const res = createMockResponse();
-      const result = await router.channelRequestThroughRequestHandlers(
-        req,
-        res,
-      );
+      const { requestHandlerReturnValue: result } = await router
+        .channelRequestThroughRequestHandlers(
+          req,
+          res,
+        );
 
       assertEquals(result, "wildcard");
       assertEquals(h1.calls.length, 0);
@@ -486,10 +496,11 @@ describe("ConcreteRouter", () => {
 
         const req = createMockRequest("GET", "http://localhost/foo/bar");
         const res = createMockResponse();
-        const result = await parentRouter.channelRequestThroughRequestHandlers(
-          req,
-          res,
-        );
+        const { requestHandlerReturnValue: result } = await parentRouter
+          .channelRequestThroughRequestHandlers(
+            req,
+            res,
+          );
 
         assertEquals(result, "sub-ok");
         assertEquals(handler.calls.length, 1);
@@ -617,10 +628,11 @@ describe("ConcreteRouter", () => {
 
         const req = createMockRequest("GET", "http://localhost/other");
         const res = createMockResponse();
-        const result = await parentRouter.channelRequestThroughRequestHandlers(
-          req,
-          res,
-        );
+        const { requestHandlerReturnValue: result } = await parentRouter
+          .channelRequestThroughRequestHandlers(
+            req,
+            res,
+          );
 
         assertEquals(result, "fallback");
         assertEquals(subHandler.calls.length, 0);
@@ -784,10 +796,11 @@ describe("ConcreteRouter", () => {
         router.use(handler);
         router.use(errorHandler);
 
-        const result = await router.channelRequestThroughRequestHandlers(
-          createMockRequest("GET"),
-          createMockResponse(),
-        );
+        const { requestHandlerReturnValue: result } = await router
+          .channelRequestThroughRequestHandlers(
+            createMockRequest("GET"),
+            createMockResponse(),
+          );
         assertEquals(result, "handled");
         assertEquals(handler.calls.length, 1);
         assertEquals(errorHandler.calls.length, 1);
@@ -821,10 +834,11 @@ describe("ConcreteRouter", () => {
         router.use(handler);
         router.use(errorHandler);
 
-        const result = await router.channelRequestThroughRequestHandlers(
-          createMockRequest("GET"),
-          createMockResponse(),
-        );
+        const { requestHandlerReturnValue: result } = await router
+          .channelRequestThroughRequestHandlers(
+            createMockRequest("GET"),
+            createMockResponse(),
+          );
         assertEquals(result, "handled");
       });
 
@@ -849,10 +863,11 @@ describe("ConcreteRouter", () => {
         router.use(handler);
         router.use(errorHandler);
 
-        const result = await router.channelRequestThroughRequestHandlers(
-          createMockRequest("GET"),
-          createMockResponse(),
-        );
+        const { requestHandlerReturnValue: result } = await router
+          .channelRequestThroughRequestHandlers(
+            createMockRequest("GET"),
+            createMockResponse(),
+          );
         assertEquals(result, "handled");
       });
     });
@@ -870,22 +885,30 @@ describe("ConcreteRouter", () => {
           },
         );
 
-        const result = await router.channelRequestThroughRequestHandlers(
+        const {
+          requestHandlerReturnValue: result,
+          requestHandlerHttpResponseStatus,
+        } = await router.channelRequestThroughRequestHandlers(
           createMockRequest("GET"),
           createMockResponse(),
         );
         assertEquals(result, undefined);
+        assertEquals(requestHandlerHttpResponseStatus, undefined);
       });
 
       it("should return a string if the handler returns a string", async () => {
         const router = new ConcreteRouter();
         router.use(() => Promise.resolve("hello"));
 
-        const result = await router.channelRequestThroughRequestHandlers(
+        const {
+          requestHandlerReturnValue: result,
+          requestHandlerHttpResponseStatus,
+        } = await router.channelRequestThroughRequestHandlers(
           createMockRequest("GET"),
           createMockResponse(),
         );
         assertEquals(result, "hello");
+        assertEquals(requestHandlerHttpResponseStatus, undefined);
       });
 
       it("should return an object if the handler returns an object", async () => {
@@ -893,11 +916,15 @@ describe("ConcreteRouter", () => {
         const obj = { foo: "bar" };
         router.use(() => Promise.resolve(obj));
 
-        const result = await router.channelRequestThroughRequestHandlers(
+        const {
+          requestHandlerReturnValue: result,
+          requestHandlerHttpResponseStatus,
+        } = await router.channelRequestThroughRequestHandlers(
           createMockRequest("GET"),
           createMockResponse(),
         );
         assertEquals(result, obj);
+        assertEquals(requestHandlerHttpResponseStatus, undefined);
       });
 
       it("should return a RouterResponse if the handler returns one", async () => {
@@ -905,11 +932,15 @@ describe("ConcreteRouter", () => {
         const res = createMockResponse();
         router.use(() => Promise.resolve(res));
 
-        const result = await router.channelRequestThroughRequestHandlers(
+        const {
+          requestHandlerReturnValue: result,
+          requestHandlerHttpResponseStatus,
+        } = await router.channelRequestThroughRequestHandlers(
           createMockRequest("GET"),
           createMockResponse(),
         );
         assertEquals(result, res);
+        assertEquals(requestHandlerHttpResponseStatus, undefined);
       });
 
       it("should return a Deno Response if the handler returns one", async () => {
@@ -917,11 +948,33 @@ describe("ConcreteRouter", () => {
         const denoRes = new Response("hi");
         router.use(() => Promise.resolve(denoRes));
 
-        const result = await router.channelRequestThroughRequestHandlers(
+        const {
+          requestHandlerReturnValue: result,
+          requestHandlerHttpResponseStatus,
+        } = await router.channelRequestThroughRequestHandlers(
           createMockRequest("GET"),
           createMockResponse(),
         );
         assertEquals(result, denoRes);
+        assertEquals(requestHandlerHttpResponseStatus, undefined);
+      });
+
+      it("should return the httpResponseStatus if set on the handler", async () => {
+        const router = new ConcreteRouter();
+        const handler: GenericRequestProcessingHandler = () =>
+          Promise.resolve("ok");
+        handler.httpResponseStatus = 201;
+        router.get("/test", handler);
+
+        const {
+          requestHandlerReturnValue: result,
+          requestHandlerHttpResponseStatus,
+        } = await router.channelRequestThroughRequestHandlers(
+          createMockRequest("GET", "http://localhost/test"),
+          createMockResponse(),
+        );
+        assertEquals(result, "ok");
+        assertEquals(requestHandlerHttpResponseStatus, 201);
       });
     });
   });

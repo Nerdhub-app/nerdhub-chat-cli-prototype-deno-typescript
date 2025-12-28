@@ -33,7 +33,10 @@ export default class ConcreteAppRouter extends ConcreteRouter
         .createFromDenoRequest(request);
       const routerResponse = new ConcreteRouterResponse();
 
-      const handlersResponse = await this.channelRequestThroughRequestHandlers(
+      const {
+        requestHandlerReturnValue: handlersResponse,
+        requestHandlerHttpResponseStatus,
+      } = await this.channelRequestThroughRequestHandlers(
         routerRequest,
         routerResponse,
       );
@@ -62,14 +65,14 @@ export default class ConcreteAppRouter extends ConcreteRouter
         return handlersResponse;
       } else if (typeof handlersResponse === "object") {
         return new Response(JSON.stringify(handlersResponse), {
-          status: HttpResponseStatus.OK,
+          status: requestHandlerHttpResponseStatus ?? HttpResponseStatus.OK,
           headers: {
             "Content-Type": "application/json",
           },
         });
       } else {
         return new Response(handlersResponse?.toString() ?? "", {
-          status: HttpResponseStatus.OK,
+          status: requestHandlerHttpResponseStatus ?? HttpResponseStatus.OK,
           headers: {
             "Content-Type": "application/text",
           },
