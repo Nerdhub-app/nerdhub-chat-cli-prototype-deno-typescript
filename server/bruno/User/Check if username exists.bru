@@ -1,0 +1,11 @@
+meta {
+  name: Check if username exists
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{API_BASE_URL}}/users/check-username-exists/{{username}}
+  body: none
+  auth: none
+}

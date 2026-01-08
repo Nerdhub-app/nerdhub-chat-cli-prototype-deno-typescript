@@ -1,0 +1,27 @@
+meta {
+  name: Sign up
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{API_BASE_URL}}/auth/signup
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "firstname": "John",
+    "lastname": "Doe",
+    "username": "johndoe",
+    "email": "johndoe@test.com",
+    "password": "123abcABC*",
+    "passwordConfirmation": "123abcABC*"
+  }
+}
+
+vars:post-response {
+  access_token: res.body.access_token
+  refresh_token: res.body.refresh_token
+}

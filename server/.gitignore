@@ -1,0 +1,8 @@
+/node_modules
+
+# KV local storage path
+/kv/.local
+
+# Bruno environments
+/bruno/environments/**
+!/bruno/environments/Local.bru

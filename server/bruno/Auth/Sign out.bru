@@ -1,0 +1,19 @@
+meta {
+  name: Sign out
+  type: http
+  seq: 5
+}
+
+delete {
+  url: {{API_BASE_URL}}/auth/signout
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{refresh_token}}
+}
+
+body:json {
+  {}
+}

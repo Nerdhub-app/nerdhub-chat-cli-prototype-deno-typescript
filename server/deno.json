@@ -2,22 +2,24 @@
   "name": "@scope/server",
   "exports": {
     ".": "./server.ts",
-    "./controller": "./controller/index.ts",
-    "./types": "./server.d.ts",
-    "./payload": "./controller/payload.d.ts",
-    "./kv": "./kv.connection.ts"
+    "./dtos": "./dtos/index.ts"
   },
   "compilerOptions": {
     "lib": [
       "deno.unstable",
       "deno.ns",
       "deno.window"
-    ]
+    ],
+    "experimentalDecorators": true
   },
   "imports": {
     "@std/ulid": "jsr:@std/ulid@^1.0.0",
     "jose": "npm:jose@^6.0.8",
     "mysql2": "npm:mysql2@^2.3.3",
     "zod": "npm:zod@^4.0.5"
+  },
+  "tasks": {
+    "dev": "deno run --watch --allow-net --allow-env --allow-read --allow-write --unstable-kv --env-file server.ts",
+    "db:migrate": "deno run -N -E --env-file scripts/db-migrate.script.ts"
   }
 }

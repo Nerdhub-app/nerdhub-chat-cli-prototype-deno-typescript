@@ -1,46 +1,53 @@
-import type { ResultSetHeader } from "mysql2/promise";
-import type { DBTableName, E2EEParticipant } from "../server.d.ts";
-import getConnectionsPool from "../database/db.pool.ts";
+import type { Pool, ResultSetHeader } from "mysql2/promise";
+import injectConnectionsPool from "../database/db.pool.ts";
+import type { E2EEParticipant } from "../database/db.d.ts";
+import { DbTableName } from "../database/db.const.ts";
 
-const tableName: DBTableName = "e2ee_participants";
-const usersTableName: DBTableName = "users";
+export class E2EEParticipantRepository {
+  #connPool!: Pool;
 
-export default class E2EEParticipantRepository {
-  static async findById(id: number): Promise<E2EEParticipant | null> {
+  constructor(connPool: Pool) {
+    this.#connPool = connPool;
+  }
+
+  async findById(id: number): Promise<E2EEParticipant | null> {
     const sql = `
-    SELECT * FROM ${tableName}
+    SELECT * FROM ${DbTableName.E2EEParticipant}
     WHERE id = ?
     `;
-    const [rows] = await getConnectionsPool().execute(sql, [id]);
+    const [rows] = await this.#connPool.execute(sql, [id]);
     const [e2eeParticipant] = rows as E2EEParticipant[];
     return e2eeParticipant ?? null;
   }
 
-  static async findByUserIdAndDeviceId(
+  async findByUserIdAndDeviceId(
     userId: number,
     deviceId: string,
   ): Promise<E2EEParticipant | null> {
     const sql = `
-    SELECT * FROM ${tableName}
+    SELECT * FROM ${DbTableName.E2EEParticipant}
     WHERE user_id = ? AND device_id = ?
     `;
-    const [rows] = await getConnectionsPool().execute(sql, [userId, deviceId]);
+    const [rows] = await this.#connPool.execute(sql, [
+      userId,
+      deviceId,
+    ]);
     const [e2eeParticipant] = rows as E2EEParticipant[];
     return e2eeParticipant ?? null;
   }
 
-  static async create(
+  async create(
     userId: number,
     deviceId: string,
-    dto: CreateE2EEParticipantDTO,
+    dto: CreateE2EEParticipantRecord,
   ): Promise<ResultSetHeader> {
-    const conn = await getConnectionsPool().getConnection();
+    const conn = await this.#connPool.getConnection();
 
     await conn.beginTransaction();
 
     try {
       let sql = `
-      INSERT INTO ${tableName} (device_id, pub_identity_key, pub_signed_prekey, signed_prekey_signature, user_id)
+      INSERT INTO ${DbTableName.E2EEParticipant} (device_id, pub_identity_key, pub_signed_prekey, signed_prekey_signature, user_id)
       VALUES (?, ?, ?, ?, ?)
       `;
       const [result] = await conn.execute(sql, [
@@ -52,14 +59,14 @@ export default class E2EEParticipantRepository {
       ]);
 
       sql = `
-      SELECT COUNT(id) as count FROM ${tableName} WHERE user_id = ?
+      SELECT COUNT(id) as count FROM ${DbTableName.E2EEParticipant} WHERE user_id = ?
       `;
       const [rows] = await conn.execute(sql, [userId]);
       const countRes = rows as { count: number }[];
 
       const hasE2EEParticipant = countRes[0]?.count > 0;
       sql = `
-      UPDATE ${usersTableName} SET has_e2ee_participant = ? WHERE id = ?
+      UPDATE ${DbTableName.User} SET has_e2ee_participant = ? WHERE id = ?
       `;
       await conn.execute(sql, [hasE2EEParticipant, userId]);
 
@@ -75,16 +82,16 @@ export default class E2EEParticipantRepository {
     }
   }
 
-  static async updatePreKeyBundleById(
+  async updatePreKeyBundleById(
     id: number,
-    dto: UpdateE2EEParticipantPreKeyBundleDTO,
+    dto: UpdateE2EEParticipantPreKeyBundleRecord,
   ): Promise<ResultSetHeader> {
     const sql = `
-    UPDATE ${tableName}
+    UPDATE ${DbTableName.E2EEParticipant}
     SET pub_identity_key = ?, pub_signed_prekey = ?, signed_prekey_signature = ?
     WHERE id = ?
     `;
-    const [result] = await getConnectionsPool().execute(sql, [
+    const [result] = await this.#connPool.execute(sql, [
       dto.pubIdentityKey,
       dto.pubSignedPreKey,
       dto.signedPreKeySignature,
@@ -94,9 +101,28 @@ export default class E2EEParticipantRepository {
   }
 }
 
-export type CreateE2EEParticipantDTO = Record<
+// E2EEParticipantRepository singleton
+let e2eeParticipantRepository: E2EEParticipantRepository;
+
+/**
+ * Injects E2EEParticipantRepository
+ * @returns E2EEParticipantRepository instance
+ */
+export const injectE2EEParticipantRepository = () => {
+  if (!e2eeParticipantRepository) {
+    e2eeParticipantRepository = new E2EEParticipantRepository(
+      injectConnectionsPool(),
+    );
+  }
+  return e2eeParticipantRepository;
+};
+
+export type CreateE2EEParticipantRecord = Record<
   "pubIdentityKey" | "pubSignedPreKey" | "signedPreKeySignature",
   string
 >;
 
-export type UpdateE2EEParticipantPreKeyBundleDTO = CreateE2EEParticipantDTO;
+export type UpdateE2EEParticipantPreKeyBundleRecord =
+  CreateE2EEParticipantRecord;
+
+export default E2EEParticipantRepository;

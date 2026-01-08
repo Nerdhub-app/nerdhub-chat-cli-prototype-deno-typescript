@@ -1,27 +1,37 @@
 import { type JWTPayload, jwtVerify, SignJWT } from "jose";
-import { parseArgs } from "@std/cli";
 
-const args = parseArgs(Deno.args, {
-  string: ["jwt-secret"],
-  default: {
-    "jwt-secret": Deno.env.get("JWT_SECRET") || "my-secret-jwt",
-  },
-});
-
-const SECRET = new TextEncoder().encode(args["jwt-secret"]);
-
+/**
+ * Creates a JWT
+ * @param payload The payload to be encoded
+ * @param secret The secret to be used for encoding
+ * @param expirationTime The expiration time of the JWT
+ * @returns The encoded JWT
+ */
 export function createJWT<T extends JWTPayload = JWTPayload>(
   payload: T,
+  secret: string,
+  expirationTime: number | string | Date,
 ): Promise<string> {
+  const encodedSecret = new TextEncoder().encode(secret);
   return new SignJWT(payload)
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
-    .setExpirationTime("1d")
-    .sign(SECRET);
+    .setExpirationTime(expirationTime)
+    .sign(encodedSecret);
 }
 
-export async function verifyJWT(token: string): Promise<JWTPayload> {
-  const { payload } = await jwtVerify(token, SECRET);
+/**
+ * Verifies a JWT
+ * @param token The JWT to be verified
+ * @param secret The secret to be used for verification
+ * @returns The decoded JWT payload
+ */
+export async function verifyJWT(
+  token: string,
+  secret: string,
+): Promise<JWTPayload> {
+  const encodedSecret = new TextEncoder().encode(secret);
+  const { payload } = await jwtVerify(token, encodedSecret);
   return payload;
 }
 

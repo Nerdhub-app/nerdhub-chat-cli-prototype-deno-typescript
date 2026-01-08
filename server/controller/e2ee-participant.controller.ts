@@ -1,60 +1,116 @@
 import {
-  HttpReponseStatus,
-  JSONResponse,
-  type MiddlewareNextFn,
-  type MiddlewareRequest,
-} from "../router.ts";
+  HttpResponseStatus,
+  type RequestHandlerReturnType,
+  type RouterRequest,
+  type RouterResponse,
+  setHttpResponseStatus,
+} from "@scope/core/router";
+import {
+  type E2EEParticipantRepository,
+  injectE2EEParticipantRepository,
+} from "../repository/e2ee-participant.repository.ts";
+import type { RequireDeviceHashMiddlewareContext } from "../middlewares/require-device-hash.middleware.ts";
+import type { AuthRouteMiddlewareContext } from "../middlewares/auth-route.middleware.ts";
 import type {
-  E2EEParticipant,
-  RequestAuthUserContext,
-  RequestDeviceHashContext,
-  RequestE2EEParticipantContext,
-} from "../server.d.ts";
-import E2EEParticipantRepository from "../repository/e2ee-participant.repository.ts";
+  CreateE2EEParticipantRequestDTO,
+  CreateE2EEParticipantResponseDTO,
+} from "../dtos/index.d.ts";
+import type { E2EEParticipant } from "../database/db.d.ts";
 import type {
-  CreateE2EEParticipantRequestPayload,
-  CreateE2EEParticipantResponsePayload,
-  UpdateE2EEParticipantPreKeyBundleRequestPayload,
-  UpdateE2EEParticipantPreKeyBundleResponsePayload,
-} from "@scope/server/payload";
+  UpdateE2EEParticipantPreKeyBundleRequestDTO,
+  UpdateE2EEParticipantPreKeyBundleResponseDTO,
+} from "../dtos/e2ee-participant.dto.ts";
+import {
+  authE2EEParticipantMatchesE2EEParticipantIdParam,
+  authUserMatchesUserIdParam,
+} from "../decorators/auth-ctx-matcher.decorators.ts";
+import autobind from "../decorators/autobind.decorator.ts";
 
-export default class E2EEParticipantController {
-  static async handleCreateE2EEParticipant(
-    req: MiddlewareRequest,
-    _next: MiddlewareNextFn,
-  ) {
-    const { deviceHash, authUser } = req.context as
-      & RequestDeviceHashContext
-      & RequestAuthUserContext;
-    const payload = req.body as CreateE2EEParticipantRequestPayload;
+export type CreateE2EEParticipantRequestContext =
+  RequireDeviceHashMiddlewareContext<AuthRouteMiddlewareContext>;
 
-    const res = await E2EEParticipantRepository.create(
-      authUser.id,
+export type UpdateE2EEParticipantPreKeyBundleRequestContext =
+  RequireDeviceHashMiddlewareContext<AuthRouteMiddlewareContext>;
+
+export class E2EEParticipantController {
+  #e2eeParticipantRepository!: E2EEParticipantRepository;
+
+  constructor(e2eeParticipantRepository: E2EEParticipantRepository) {
+    this.#e2eeParticipantRepository = e2eeParticipantRepository;
+  }
+
+  @autobind
+  @authUserMatchesUserIdParam()
+  @setHttpResponseStatus(HttpResponseStatus.CREATED)
+  async handleCreateE2EEParticipant(
+    req: RouterRequest<
+      Record<string, unknown>,
+      Record<string, string>,
+      CreateE2EEParticipantRequestContext,
+      CreateE2EEParticipantRequestDTO
+    >,
+    _res: RouterResponse,
+  ): Promise<RequestHandlerReturnType<CreateE2EEParticipantResponseDTO>> {
+    const { deviceHash, authUser } = req.context;
+    const payload = req.body;
+
+    const insertResult = await this.#e2eeParticipantRepository.create(
+      authUser!.id,
       deviceHash,
       payload,
     );
+    const e2eeParticipant = await this.#e2eeParticipantRepository.findById(
+      insertResult.insertId,
+    ) as E2EEParticipant;
 
-    const resBody: CreateE2EEParticipantResponsePayload =
-      await E2EEParticipantRepository.findById(res.insertId) as E2EEParticipant;
-    return new JSONResponse(resBody, HttpReponseStatus.CREATED);
+    return e2eeParticipant;
   }
 
-  static async handleUpdateE2EEParticipantPreKeyBundle(
-    req: MiddlewareRequest,
-    _next: MiddlewareNextFn,
-  ) {
-    const { e2eeParticipant } = req.context as RequestE2EEParticipantContext;
-    const payload = req.body as UpdateE2EEParticipantPreKeyBundleRequestPayload;
+  @autobind
+  @authE2EEParticipantMatchesE2EEParticipantIdParam()
+  @authUserMatchesUserIdParam()
+  async handleUpdateE2EEParticipantPreKeyBundle(
+    req: RouterRequest<
+      Record<string, unknown>,
+      Record<string, string>,
+      UpdateE2EEParticipantPreKeyBundleRequestContext,
+      UpdateE2EEParticipantPreKeyBundleRequestDTO
+    >,
+    _res: RouterResponse,
+  ): Promise<
+    RequestHandlerReturnType<UpdateE2EEParticipantPreKeyBundleResponseDTO>
+  > {
+    let { e2eeParticipant } = req.context;
+    const payload = req.body;
 
-    await E2EEParticipantRepository.updatePreKeyBundleById(
-      e2eeParticipant.id,
+    await this.#e2eeParticipantRepository.updatePreKeyBundleById(
+      e2eeParticipant!.id,
       payload,
     );
 
-    const resBody: UpdateE2EEParticipantPreKeyBundleResponsePayload =
-      await E2EEParticipantRepository.findById(
-        e2eeParticipant.id,
+    e2eeParticipant = await this
+      .#e2eeParticipantRepository.findById(
+        e2eeParticipant!.id,
       ) as E2EEParticipant;
-    return resBody;
+
+    return e2eeParticipant;
   }
 }
+
+// E2EEParticipantController singleton
+let e2eeParticipantController: E2EEParticipantController;
+
+/**
+ * Injects E2EEParticipantController
+ * @returns E2EEParticipantController instance
+ */
+export const injectE2EEParticipantController = () => {
+  if (!e2eeParticipantController) {
+    e2eeParticipantController = new E2EEParticipantController(
+      injectE2EEParticipantRepository(),
+    );
+  }
+  return e2eeParticipantController;
+};
+
+export default E2EEParticipantController;

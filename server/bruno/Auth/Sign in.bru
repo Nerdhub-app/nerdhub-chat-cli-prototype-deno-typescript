@@ -1,0 +1,23 @@
+meta {
+  name: Sign in
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{API_BASE_URL}}/auth/signin
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "email": "johndoe@test.com",
+    "password": "123abcABC*"
+  }
+}
+
+vars:post-response {
+  access_token: res.body.access_token
+  refresh_token: res.body.refresh_token
+}
